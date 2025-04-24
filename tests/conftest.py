@@ -10,6 +10,7 @@ TEST_HOST = "http://test-host"
 SERVICE_ID = "c745a8d8-b48a-4b0d-96e5-dbea0165ebd1"
 API_KEY_ID = "8b3aa916-ec82-434e-b0c5-d5d9b371d6a3"
 COMBINED_API_KEY = f"key_name-{SERVICE_ID}-{API_KEY_ID}"
+CLIENT_ID = "bf5ed2049c2be1a478145c689e14fecb"
 
 
 @pytest.fixture
@@ -26,9 +27,9 @@ def rmock_patch():
 
 @pytest.fixture
 def base_client():
-    yield BaseAPIClient(base_url=TEST_HOST, api_key=COMBINED_API_KEY)
+    yield BaseAPIClient(base_url=TEST_HOST, api_key=COMBINED_API_KEY, client_id=CLIENT_ID)
 
 
 @pytest.fixture
 def notifications_client():
-    yield NotificationsAPIClient(base_url=TEST_HOST, api_key=COMBINED_API_KEY)
+    yield NotificationsAPIClient(base_url=TEST_HOST, api_key=COMBINED_API_KEY, client_id=CLIENT_ID)

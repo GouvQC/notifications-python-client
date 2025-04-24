@@ -240,7 +240,7 @@ def test_create_email_notification_with_document_file_upload(notifications_clien
         "personalisation": {
             "name": "chris",
             "doc": {
-                "file": "JVBERi0xLjUgdGVzdAo=",
+                "file": "JVBERi0xLjUgdGVzdA0K",
                 "filename": None,
                 "confirm_email_before_download": None,
                 "retention_period": None,
@@ -266,7 +266,7 @@ def test_create_email_notification_with_csv_file_upload(notifications_client, rm
         "personalisation": {
             "name": "chris",
             "doc": {
-                "file": "VGhpcyBpcyBhIGNzdiwK",
+                "file": "VGhpcyBpcyBhIGNzdiwNCg==",
                 "filename": "file.csv",
                 "confirm_email_before_download": None,
                 "retention_period": None,
