@@ -6,14 +6,14 @@ import requests
 
 from notifications_python_client.base import BaseAPIClient
 from notifications_python_client.errors import HTTPError, InvalidResponse
-from tests.conftest import API_KEY_ID, COMBINED_API_KEY, SERVICE_ID
+from tests.conftest import API_KEY_ID, COMBINED_API_KEY, SERVICE_ID, CLIENT_ID
 
 
 @pytest.mark.parametrize(
     "client",
     [
-        BaseAPIClient(api_key=COMBINED_API_KEY),
-        BaseAPIClient(COMBINED_API_KEY),
+        BaseAPIClient(api_key=COMBINED_API_KEY, client_id=CLIENT_ID),
+        BaseAPIClient(COMBINED_API_KEY, CLIENT_ID),
     ],
     ids=["combined api key", "positional api key"],
 )
@@ -22,16 +22,16 @@ def test_passes_through_service_id_and_key(rmock, client):
         rmock.request("GET", "/", status_code=204)
         client.request("GET", "/")
     mock_create_token.assert_called_once_with(API_KEY_ID, SERVICE_ID)
-    assert client.base_url == "https://api.notifications.service.gov.uk"
+    assert client.base_url == "https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn"
 
 
 def test_can_set_base_url():
-    client = BaseAPIClient(base_url="foo", api_key=COMBINED_API_KEY)
+    client = BaseAPIClient(base_url="foo", api_key=COMBINED_API_KEY, client_id=CLIENT_ID)
     assert client.base_url == "foo"
 
 
 def test_set_timeout():
-    client = BaseAPIClient(base_url="foo", api_key=COMBINED_API_KEY, timeout=2)
+    client = BaseAPIClient(base_url="foo", api_key=COMBINED_API_KEY, timeout=2, client_id=CLIENT_ID)
     assert client.timeout == 2
 
 
@@ -40,8 +40,14 @@ def test_default_timeout_is_set(base_client):
 
 
 def test_fails_if_client_id_missing():
+    with pytest.raises(TypeError) as err:
+        BaseAPIClient(api_key=COMBINED_API_KEY)
+    assert "missing 1 required positional argument: 'client_id'" in str(err.value)
+
+
+def test_fails_if_service_id_missing():
     with pytest.raises(AssertionError) as err:
-        BaseAPIClient(api_key=API_KEY_ID)
+        BaseAPIClient(api_key=API_KEY_ID, client_id=CLIENT_ID)
     assert str(err.value) == "Missing service ID"
 
 

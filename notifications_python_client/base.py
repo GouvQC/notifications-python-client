@@ -14,16 +14,17 @@ logger = logging.getLogger(__name__)
 
 class BaseAPIClient:
     """
-    Base class for GOV.UK Notify API client.
+    Base class for PGN API client.
 
-    This class is not thread-safe.
+     Args:
+        api_key (str): The combined API key used to authenticate requests to the Notification API.
+        client_id (str): A required unique identifier for the client or service making the request.
     """
-
-    def __init__(self, api_key, base_url="https://api.notifications.service.gov.uk", timeout=30):
+    def __init__(self, api_key, client_id, base_url="https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn", timeout=30):
         """
         Initialise the client
         Error if either of base_url or secret missing
-        :param base_url - base URL of GOV.UK Notify API:
+        :param base_url - base URL of PGN API:
         :param secret - application secret - used to sign the request:
         :param timeout - request timeout on the client
         :return:
@@ -34,6 +35,9 @@ class BaseAPIClient:
         assert base_url, "Missing base url"
         assert service_id, "Missing service ID"
         assert api_key, "Missing API key"
+        assert client_id, "Missing client_id"
+
+        self.client_id = client_id
         self.base_url = base_url
         self.service_id = service_id
         self.api_key = api_key
@@ -53,11 +57,19 @@ class BaseAPIClient:
         return self.request("DELETE", url, data=data)
 
     def generate_headers(self, api_token):
-        return {
+        """
+        Generates headers including the Bearer Token 
+        and the mandatory X-QC-Client-Id for the PGGAPI.
+        """
+        headers = {
             "Content-type": "application/json",
             "Authorization": f"Bearer {api_token}",
             "User-agent": f"NOTIFY-API-PYTHON-CLIENT/{__version__}",
+            "X-QC-Client-Id": self.client_id
         }
+
+        return headers
+    
 
     def request(self, method, url, data=None, params=None):
         logger.debug("API request %s %s", method, url)
