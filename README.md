@@ -1,10 +1,10 @@
-# GOV.UK Notify Python client
+# La Plateforme gouvernementale de notification Python client
 
-Use this client to send emails, text messages and letters using the [GOV.UK Notify](https://www.notifications.service.gov.uk) API.
+Use this client to send emails, text messages and letters using la [Plateforme gouvernementale de notification](https://admin.notification.gouv.qc.ca/) API.
 
 Useful links:
 
-- [Documentation](https://docs.notifications.service.gov.uk/python.html)
-- [PyPi package](https://pypi.org/project/notifications-python-client/)
-- [Changelog](https://github.com/alphagov/notifications-python-client/blob/main/CHANGELOG.md)
-- [Contributing to this client](https://github.com/alphagov/notifications-python-client/blob/main/CONTRIBUTING.md)
+- [Documentation](https://documentation.notification.gouv.qc.ca/fr/)
+- [PyPi package](https://pypi.org/project/notifications-python-client-pgn/)
+- [Changelog](https://github.com/GouvQC/notifications-python-client/blob/main/CHANGELOG.md)
+- [Contributing to this client](https://github.com/GouvQC/notifications-python-client/blob/main/CONTRIBUTING.md)
