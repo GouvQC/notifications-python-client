@@ -121,7 +121,7 @@ Le Ministère s’engage à protéger la sécurité et l’intégrité de toutes
 
 Les renseignements que vous soumettez lors du processus sont utilisés uniquement pour atténuer ou corriger les vulnérabilités.
 
-Si vous pensez avoir trouvé une vulnérabilité en matière de sécurité, avertissez-nous dès que possible. Veuillez nous faire parvenir votre signalement par courriel au [Soutien au développement](mailto:SoutienDevNTIC@mcn.gouv.qc.ca).
+Si vous pensez avoir trouvé une vulnérabilité en matière de sécurité, avertissez-nous dès que possible. Veuillez nous faire parvenir votre signalement par courriel au [Soutien au PGN](mailto:assistance.pgn@mcn.gouv.qc.ca).
 
 Vous pouvez envoyer des signalements de façon anonyme. Nous ne prenons pas en charge les courriels chiffrés PGP pour le moment.
 

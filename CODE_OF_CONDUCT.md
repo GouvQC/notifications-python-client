@@ -34,4 +34,4 @@ Des cas de conduite abusive, de harcèlement ou autre pratique jugée inacceptab
 
 ## Attribution
 
-Ce Code de conduite est inspiré du « Contributor Covenant » (<https://contributor-covenant.org>) version 1.2.0, disponible à l’adresse <https://contributor-covenant.org/version/1/2/0/>.
+Ce Code de conduite est inspiré du [Contributor Covenant](<https://contributor-covenant.org>) version 1.2.0.
