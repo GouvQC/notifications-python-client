@@ -45,13 +45,13 @@ def test_allows_client_id_missing_if_not_mcn_url():
 
 
 def test_fails_if_client_id_missing_and_url_is_mcn():
-    with pytest.raises(AssertionError) as err:
+    with pytest.raises(ValueError) as err:
         BaseAPIClient(api_key=COMBINED_API_KEY, base_url="https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn")
     assert str(err.value) == "A valid client identifier (X-QC-Client-Id) is required when using the PGGAPI proxy."
 
 
 def test_fails_if_service_id_missing():
-    with pytest.raises(AssertionError) as err:
+    with pytest.raises(ValueError) as err:
         BaseAPIClient(api_key=API_KEY_ID, client_id=CLIENT_ID)
     assert str(err.value) == "Missing service ID"
 
@@ -127,3 +127,20 @@ def test_converts_extended_types_to_json(base_client, rmock, data, expected_json
     )
 
     base_client.request("GET", "/", data=data)
+
+def test_client_id_is_added_to_headers(base_client, rmock):
+    rmock.request("GET", "http://test-host/", json={}, status_code=200)
+    
+    base_client.client_id = "test-client-id"
+    base_client.request("GET", "/")
+
+    assert rmock.last_request.headers.get("X-QC-Client-Id") == "test-client-id"
+
+
+def test_client_id_header_absent_if_not_set(base_client, rmock):
+    rmock.request("GET", "http://test-host/", json={}, status_code=200)
+
+    base_client.client_id = None
+    base_client.request("GET", "/")
+
+    assert "X-QC-Client-Id" not in rmock.last_request.headers

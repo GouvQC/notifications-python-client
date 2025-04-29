@@ -32,12 +32,15 @@ class BaseAPIClient:
         service_id = api_key[-73:-37]
         api_key = api_key[-36:]
 
-        assert base_url, "Missing base url"
-        assert service_id, "Missing service ID"
-        assert api_key, "Missing API key"
+        if not base_url:
+            raise ValueError("Missing base url")
+        if not service_id:
+            raise ValueError("Missing service ID")
+        if not api_key:
+            raise ValueError("Missing API key")
 
-        if "mcn.api.gouv.qc.ca" in base_url:
-            assert client_id, "A valid client identifier (X-QC-Client-Id) is required when using the PGGAPI proxy."
+        if "mcn.api.gouv.qc.ca" in base_url and not client_id:
+            raise ValueError("A valid client identifier (X-QC-Client-Id) is required when using the PGGAPI proxy.")
 
         self.client_id = client_id
         self.base_url = base_url
