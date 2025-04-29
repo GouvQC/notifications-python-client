@@ -39,10 +39,15 @@ def test_default_timeout_is_set(base_client):
     assert base_client.timeout == 30
 
 
-def test_fails_if_client_id_missing():
-    with pytest.raises(TypeError) as err:
-        BaseAPIClient(api_key=COMBINED_API_KEY)
-    assert "missing 1 required positional argument: 'client_id'" in str(err.value)
+def test_allows_client_id_missing_if_not_mcn_url():
+    client = BaseAPIClient(api_key=COMBINED_API_KEY, base_url="https://api.example.com")
+    assert client.client_id is None
+
+
+def test_fails_if_client_id_missing_and_url_is_mcn():
+    with pytest.raises(AssertionError) as err:
+        BaseAPIClient(api_key=COMBINED_API_KEY, base_url="https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn")
+    assert str(err.value) == "A valid client identifier (X-QC-Client-Id) is required when using the PGGAPI proxy."
 
 
 def test_fails_if_service_id_missing():
