@@ -18,9 +18,9 @@ class BaseAPIClient:
 
      Args:
         api_key (str): The combined API key used to authenticate requests to the Notification API.
-        client_id (str): A required unique identifier for the client or service making the request.
+        client_id (str or None): Optional. Required only if the proxy is MCN (PGGAPI).
     """
-    def __init__(self, api_key, client_id, base_url="https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn", timeout=30):
+    def __init__(self, api_key, client_id=None, base_url="https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn", timeout=30):
         """
         Initialise the client
         Error if either of base_url or secret missing
@@ -32,10 +32,15 @@ class BaseAPIClient:
         service_id = api_key[-73:-37]
         api_key = api_key[-36:]
 
-        assert base_url, "Missing base url"
-        assert service_id, "Missing service ID"
-        assert api_key, "Missing API key"
-        assert client_id, "Missing client_id"
+        if not base_url:
+            raise ValueError("Missing base url")
+        if not service_id:
+            raise ValueError("Missing service ID")
+        if not api_key:
+            raise ValueError("Missing API key")
+
+        if "mcn.api.gouv.qc.ca" in base_url and not client_id:
+            raise ValueError("A valid client identifier (X-QC-Client-Id) is required when using the PGGAPI proxy.")
 
         self.client_id = client_id
         self.base_url = base_url
@@ -64,9 +69,11 @@ class BaseAPIClient:
         headers = {
             "Content-type": "application/json",
             "Authorization": f"Bearer {api_token}",
-            "User-agent": f"NOTIFY-API-PYTHON-CLIENT/{__version__}",
-            "X-QC-Client-Id": self.client_id
+            "User-agent": f"NOTIFY-API-PYTHON-CLIENT/{__version__}"
         }
+
+        if self.client_id:
+            headers["X-QC-Client-Id"] = self.client_id
 
         return headers
     
