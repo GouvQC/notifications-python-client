@@ -15,6 +15,7 @@ docker run \
   -e EMAIL_REPLY_TO_ID=${EMAIL_REPLY_TO_ID} \
   -e SMS_SENDER_ID=${SMS_SENDER_ID} \
   -e API_SENDING_KEY=${API_SENDING_KEY} \
+  -e CLIENT_ID=${CLIENT_ID} \
   -it \
   ${DOCKER_IMAGE_NAME} \
   ${@}

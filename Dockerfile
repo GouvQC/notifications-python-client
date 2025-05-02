@@ -18,10 +18,11 @@ RUN apt-get update && \
       libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl https://pyenv.run | bash
+RUN git clone https://github.com/pyenv/pyenv.git /root/.pyenv
 
-ENV PYENV_ROOT /root/.pyenv
-ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
+ENV PYENV_ROOT=/root/.pyenv
+ENV PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+
 RUN ls /root/.pyenv/bin
 RUN eval "$(/root/.pyenv/bin/pyenv init - )"
 

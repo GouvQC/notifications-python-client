@@ -46,12 +46,10 @@ def send_email_notification_test_response(python_client, reply_to=None):
     email_reply_to_id = reply_to
     unique_name = str(uuid.uuid4())
     personalisation = {"name": unique_name}
-    one_click_unsubscribe_url = "https://unsubscribelink.com/unsubscribe"
     response = python_client.send_email_notification(
         email_address=email_address,
         template_id=template_id,
         personalisation=personalisation,
-        one_click_unsubscribe_url=one_click_unsubscribe_url,
         email_reply_to_id=email_reply_to_id,
     )
     validate(response, post_email_response)
@@ -132,9 +130,11 @@ def get_all_templates_for_type(python_client, template_type):
 
 
 def test_integration():
-    client = NotificationsAPIClient(base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_KEY"])
+    client = NotificationsAPIClient(
+        base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_KEY"], client_id=os.environ["CLIENT_ID"]
+        )
     client_using_team_key = NotificationsAPIClient(
-        base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_SENDING_KEY"]
+        base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_SENDING_KEY"], client_id=os.environ["CLIENT_ID"]
     )
 
     sms_template_id = os.environ["SMS_TEMPLATE_ID"]
