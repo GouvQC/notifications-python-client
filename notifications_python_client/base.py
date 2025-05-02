@@ -89,7 +89,7 @@ class BaseAPIClient:
 
         return self._process_json_response(response)
 
-    def  _create_request_objects(self, url, data, params):
+    def _create_request_objects(self, url, data, params):
         api_token = create_jwt_token(self.api_key, self.service_id)
 
         kwargs = {"headers": self.generate_headers(api_token, url), "timeout": self.timeout}
