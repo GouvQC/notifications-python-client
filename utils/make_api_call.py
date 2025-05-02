@@ -10,9 +10,7 @@ Options:
     --template=<4051caf5-3c65-4dd3-82d7-31c8c8e82e27>
     --personalisation=<{}>
     --reference=<''>
-    --one_click_unsubscribe_url=<''>
     --sms_sender_id=<''>
-    --filename=<''>
 
 Example:
     ./make_api_call.py http://api my_service super_secret \
@@ -29,16 +27,12 @@ from notifications_python_client.notifications import NotificationsAPIClient
 
 
 def create_notification(notifications_client, **kwargs):
-    notification_type = kwargs["--type"] or input("enter type email|sms|letter|precompiled_letter: ")
+    notification_type = kwargs["--type"] or input("enter type email|sms: ")
 
     if notification_type == "sms":
         return create_sms_notification(notifications_client, **kwargs)
     if notification_type == "email":
         return create_email_notification(notifications_client, **kwargs)
-    if notification_type == "letter":
-        return create_letter_notification(notifications_client, **kwargs)
-    if notification_type == "precompiled_letter":
-        return create_precompiled_letter_notification(notifications_client, **kwargs)
     print(f"Invalid type: {notification_type}, exiting")
     sys.exit(1)
 
@@ -69,7 +63,6 @@ def create_email_notification(notifications_client, **kwargs):
     reference = (
         kwargs["--reference"] if kwargs["--reference"] is not None else input("reference string for notification: ")
     )
-    one_click_unsubscribe_url = kwargs["--one_click_unsubscribe_url"] or input("one_click_unsubscribe_url")
     email_reply_to_id = input("email reply to id:")
     return notifications_client.send_email_notification(
         email_address,
@@ -77,26 +70,7 @@ def create_email_notification(notifications_client, **kwargs):
         personalisation=personalisation,
         reference=reference,
         email_reply_to_id=email_reply_to_id,
-        one_click_unsubscribe_url=one_click_unsubscribe_url,
     )
-
-
-def create_letter_notification(notifications_client, **kwargs):
-    template_id = kwargs["--template"] or input("template id: ")
-    personalisation = json.loads(kwargs["--personalisation"] or input("personalisation (as JSON):"))
-    reference = (
-        kwargs["--reference"] if kwargs["--reference"] is not None else input("reference string for notification: ")
-    )
-    return notifications_client.send_letter_notification(
-        template_id=template_id, personalisation=personalisation, reference=reference
-    )
-
-
-def create_precompiled_letter_notification(notifications_client, **kwargs):
-    reference = kwargs["--reference"] or input("reference string for notification: ")
-    filename = kwargs["--filename"] or input("filename (pdf): ")
-    with open(filename, "rb") as pdf_file:
-        return notifications_client.send_precompiled_letter_notification(reference=reference, pdf_file=pdf_file)
 
 
 def get_notification(notifications_client):

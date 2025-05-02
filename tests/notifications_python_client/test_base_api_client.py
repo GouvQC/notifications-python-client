@@ -6,7 +6,7 @@ import requests
 
 from notifications_python_client.base import BaseAPIClient
 from notifications_python_client.errors import HTTPError, InvalidResponse
-from tests.conftest import API_KEY_ID, COMBINED_API_KEY, SERVICE_ID, CLIENT_ID
+from tests.conftest import API_KEY_ID, CLIENT_ID, COMBINED_API_KEY, SERVICE_ID
 
 
 @pytest.mark.parametrize(
@@ -128,12 +128,15 @@ def test_converts_extended_types_to_json(base_client, rmock, data, expected_json
 
     base_client.request("GET", "/", data=data)
 
-def test_client_id_is_added_to_headers(base_client, rmock):
-    rmock.request("GET", "http://test-host/", json={}, status_code=200)
-    
-    base_client.client_id = "test-client-id"
-    base_client.request("GET", "/")
 
+def test_client_id_is_added_to_headers(base_client, rmock):
+    # Mock pour une URL contenant "mcn.api.gouv.qc.ca"
+    rmock.request("GET", "http://mcn.api.gouv.qc.ca/resource", json={}, status_code=200)
+
+    base_client.client_id = "test-client-id"
+    base_client.request("GET", "http://mcn.api.gouv.qc.ca/resource")
+
+    # Vérification que le client_id est ajouté aux en-têtes
     assert rmock.last_request.headers.get("X-QC-Client-Id") == "test-client-id"
 
 

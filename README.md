@@ -1,6 +1,6 @@
 # La Plateforme gouvernementale de notification Python client
 
-Use this client to send emails, text messages and letters using la [Plateforme gouvernementale de notification](https://admin.notification.gouv.qc.ca/) API.
+Use this client to send emails and text messages using la [Plateforme gouvernementale de notification](https://admin.notification.gouv.qc.ca/) API.
 
 Useful links:
 

@@ -20,6 +20,7 @@ class BaseAPIClient:
         api_key (str): The combined API key used to authenticate requests to the Notification API.
         client_id (str or None): Optional. Required only if the proxy is MCN (PGGAPI).
     """
+
     def __init__(self, api_key, client_id=None, base_url="https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn", timeout=30):
         """
         Initialise the client
@@ -53,30 +54,32 @@ class BaseAPIClient:
         return self.request("PUT", url, data=data)
 
     def get(self, url, params=None):
+        """Send a GET request."""
         return self.request("GET", url, params=params)
 
     def post(self, url, data):
+        """Send a POST request."""
         return self.request("POST", url, data=data)
 
     def delete(self, url, data=None):
+        """Send a DELETE request."""
         return self.request("DELETE", url, data=data)
 
-    def generate_headers(self, api_token):
+    def generate_headers(self, api_token, url): 
         """
-        Generates headers including the Bearer Token 
+        Generates headers including the Bearer Token
         and the mandatory X-QC-Client-Id for the PGGAPI.
         """
         headers = {
             "Content-type": "application/json",
             "Authorization": f"Bearer {api_token}",
-            "User-agent": f"NOTIFY-API-PYTHON-CLIENT/{__version__}"
+            "User-agent": f"NOTIFY-API-PYTHON-CLIENT/{__version__}",
         }
 
-        if self.client_id:
+        if "mcn.api.gouv.qc.ca" in url and self.client_id:
             headers["X-QC-Client-Id"] = self.client_id
 
         return headers
-    
 
     def request(self, method, url, data=None, params=None):
         logger.debug("API request %s %s", method, url)
@@ -86,10 +89,10 @@ class BaseAPIClient:
 
         return self._process_json_response(response)
 
-    def _create_request_objects(self, url, data, params):
+    def  _create_request_objects(self, url, data, params):
         api_token = create_jwt_token(self.api_key, self.service_id)
 
-        kwargs = {"headers": self.generate_headers(api_token), "timeout": self.timeout}
+        kwargs = {"headers": self.generate_headers(api_token, url), "timeout": self.timeout}
 
         if data is not None:
             kwargs.update(data=self._serialize_data(data))

@@ -27,7 +27,7 @@ get_notification_response = {
         "line_6": {"type": ["string", "null"]},
         "postcode": {"type": ["string", "null"]},
         "postage": {"enum": ["first", "second", None]},
-        "type": {"enum": ["sms", "letter", "email"]},
+        "type": {"enum": ["sms", "email"]},
         "status": {"type": "string"},
         "template": template,
         "body": {"type": "string"},
@@ -158,52 +158,6 @@ post_email_response = {
         "template": template,
     },
     "required": ["id", "content", "uri", "template"],
-}
-
-post_letter_request = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST letter notification schema",
-    "type": "object",
-    "title": "POST v2/notifications/letter",
-    "properties": {"reference": {"type": "string"}, "template_id": uuid, "personalisation": personalisation},
-    "required": ["letter_address", "template_id"],
-}
-
-letter_content = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Letter content for POST letter notification",
-    "type": "object",
-    "title": "notification letter content",
-    "properties": {"body": {"type": ["string", "null"]}, "subject": {"type": "string"}},
-    "required": ["body", "subject"],
-}
-
-post_letter_response = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST letter notification response schema",
-    "type": "object",
-    "title": "response v2/notifications/letter",
-    "properties": {
-        "id": uuid,
-        "reference": {"type": ["string", "null"]},
-        "content": letter_content,
-        "uri": {"type": "string"},
-        "template": template,
-    },
-    "required": ["id", "content", "uri", "template"],
-}
-
-post_precompiled_letter_response = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST letter notification response schema",
-    "type": "object",
-    "title": "response v2/notifications/letter",
-    "properties": {
-        "id": uuid,
-        "reference": {"type": ["string", "null"]},
-        "postage": {"enum": ["first", "second", None]},
-    },
-    "required": ["id", "reference"],
 }
 
 
