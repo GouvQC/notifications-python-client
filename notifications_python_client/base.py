@@ -65,7 +65,7 @@ class BaseAPIClient:
         """Send a DELETE request."""
         return self.request("DELETE", url, data=data)
 
-    def generate_headers(self, api_token, url): 
+    def generate_headers(self, api_token, url):
         """
         Generates headers including the Bearer Token
         and the mandatory X-QC-Client-Id for the PGGAPI.
