@@ -19,15 +19,15 @@ from tests.conftest import API_KEY_ID, CLIENT_ID, COMBINED_API_KEY, SERVICE_ID
 )
 def test_passes_through_service_id_and_key(rmock, client):
     with mock.patch("notifications_python_client.base.create_jwt_token") as mock_create_token:
-        rmock.request("GET", "/", status_code=204)
+        rmock.request("GET", "https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn/", status_code=204)
         client.request("GET", "/")
     mock_create_token.assert_called_once_with(API_KEY_ID, SERVICE_ID)
-    assert client.base_url == "https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn"
+    assert client.base_url == "https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn/"
 
 
 def test_can_set_base_url():
-    client = BaseAPIClient(base_url="foo", api_key=COMBINED_API_KEY, client_id=CLIENT_ID)
-    assert client.base_url == "foo"
+    client = BaseAPIClient(base_url="https://example.com/api", api_key=COMBINED_API_KEY, client_id=CLIENT_ID)
+    assert client.base_url == "https://example.com/api"
 
 
 def test_set_timeout():
@@ -130,11 +130,17 @@ def test_converts_extended_types_to_json(base_client, rmock, data, expected_json
 
 
 def test_client_id_is_added_to_headers(base_client, rmock):
-    # Mock pour une URL contenant "mcn.api.gouv.qc.ca"
-    rmock.request("GET", "http://mcn.api.gouv.qc.ca/resource", json={}, status_code=200)
+    # Définir la base_url correctement
+    base_client.base_url = "https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn"
 
+    # Mock pour l'URL complète
+    rmock.request("GET", "https://gw-gouvqc.mcn.api.gouv.qc.ca/pgn/resource", json={}, status_code=200)
+
+    # Définir le client_id
     base_client.client_id = "test-client-id"
-    base_client.request("GET", "http://mcn.api.gouv.qc.ca/resource")
+
+    # Effectuer la requête
+    base_client.request("GET", "resource")
 
     # Vérification que le client_id est ajouté aux en-têtes
     assert rmock.last_request.headers.get("X-QC-Client-Id") == "test-client-id"

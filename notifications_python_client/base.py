@@ -1,7 +1,6 @@
 import json
 import logging
 import time
-import urllib.parse
 
 import requests
 
@@ -90,6 +89,11 @@ class BaseAPIClient:
         return self._process_json_response(response)
 
     def _create_request_objects(self, url, data, params):
+        # Construire l'URL complète sans supprimer le chemin de base
+        if not self.base_url.endswith("/"):
+            self.base_url += "/"
+        url = f"{self.base_url.rstrip('/')}/{url.lstrip('/')}"
+
         api_token = create_jwt_token(self.api_key, self.service_id)
 
         kwargs = {"headers": self.generate_headers(api_token, url), "timeout": self.timeout}
@@ -99,11 +103,6 @@ class BaseAPIClient:
 
         if params is not None:
             kwargs.update(params=params)
-
-        # Construire l'URL complète sans supprimer le chemin de base
-        if not self.base_url.endswith("/"):
-            self.base_url += "/"
-        url = f"{self.base_url.rstrip('/')}/{url.lstrip('/')}"
 
         return url, kwargs
 
