@@ -132,7 +132,7 @@ def get_all_templates_for_type(python_client, template_type):
 def test_integration():
     client = NotificationsAPIClient(
         base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_KEY"], client_id=os.environ["CLIENT_ID"]
-        )
+    )
     client_using_team_key = NotificationsAPIClient(
         base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_SENDING_KEY"], client_id=os.environ["CLIENT_ID"]
     )

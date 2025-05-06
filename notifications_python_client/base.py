@@ -100,7 +100,10 @@ class BaseAPIClient:
         if params is not None:
             kwargs.update(params=params)
 
-        url = urllib.parse.urljoin(str(self.base_url), str(url))
+        # Construire l'URL complète sans supprimer le chemin de base
+        if not self.base_url.endswith("/"):
+            self.base_url += "/"
+        url = f"{self.base_url.rstrip('/')}/{url.lstrip('/')}"
 
         return url, kwargs
 
