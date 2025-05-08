@@ -1,5 +1,5 @@
-import time
 import os
+import time
 import uuid
 
 from jsonschema import Draft4Validator
@@ -76,7 +76,7 @@ def send_bulk_notifications_with_csv(notifications_client):
     """
     template_id = os.environ["EMAIL_TEMPLATE_ID"]
     functional_test_email = os.environ["FUNCTIONAL_TEST_EMAIL"]
-    
+
     name = "Bulk send email with personalisation"
     csv_data = f"email,name\n{functional_test_email},Alice\n{functional_test_email},Wok"
     reference = "bulk_ref_integration_test_csv"
@@ -115,7 +115,7 @@ def send_email_notification_test_response(python_client, reply_to=None):
 
 
 def get_notification_by_id(python_client, id, notification_type):
-    print("Appel de get_notification_by_id avec ID:", id)
+    # print("Appel de get_notification_by_id avec ID:", id)
     response = python_client.get_notification_by_id(id)
     if notification_type == EMAIL_TYPE:
         validate(response, get_notification_response)
@@ -187,10 +187,10 @@ def get_all_templates_for_type(python_client, template_type):
     validate(response, get_all_template_response)
 
 def retry_get_notification_by_id(python_client, id, notification_type, max_retries=5, delay=3):
-    import time
+
     from requests.exceptions import HTTPError
 
-    for attempt in range(max_retries):
+    for _attempt in range(max_retries):
         try:
             response = python_client.get_notification_by_id(id)
             if notification_type == EMAIL_TYPE or notification_type == SMS_TYPE:
@@ -220,13 +220,15 @@ def check_health_integration(notifications_client):
 
 
 def test_integration():
-    print("API_KEY -36::", os.environ["API_KEY"][-36:])
+    # print("API_KEY -36::", os.environ["API_KEY"][-36:])
     client = NotificationsAPIClient(
         base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_KEY"], client_id=os.environ["CLIENT_ID"]
     )
-    client_using_team_key = NotificationsAPIClient(
-        base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_SENDING_KEY"], client_id=os.environ["CLIENT_ID"]
-    )
+    # client_using_team_key = NotificationsAPIClient(
+    #     base_url=os.environ["NOTIFY_API_URL"],
+    #     api_key=os.environ["API_SENDING_KEY"],
+    #     client_id=os.environ["CLIENT_ID"]
+    # )
 
     sms_template_id = os.environ["SMS_TEMPLATE_ID"]
     sms_sender_id = os.environ["SMS_SENDER_ID"]
@@ -246,7 +248,7 @@ def test_integration():
     send_bulk_notifications_with_csv(client)
 
     sms_id = send_sms_notification_test_response(client)
-    print("SMS ID envoyé par le test:", sms_id)
+    # print("SMS ID envoyé par le test:", sms_id)
     email_id = send_email_notification_test_response(client)
 
     get_all_notifications(client)
