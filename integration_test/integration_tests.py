@@ -186,8 +186,8 @@ def get_all_templates_for_type(python_client, template_type):
     response = python_client.get_all_templates(template_type)
     validate(response, get_all_template_response)
 
-def retry_get_notification_by_id(python_client, id, notification_type, max_retries=5, delay=3):
 
+def retry_get_notification_by_id(python_client, id, notification_type, max_retries=5, delay=3):
     from requests.exceptions import HTTPError
 
     for _attempt in range(max_retries):
@@ -270,7 +270,6 @@ def test_integration():
 
     # retry_get_notification_by_id(client, sms_id, SMS_TYPE)
     # retry_get_notification_by_id(client, email_id, EMAIL_TYPE)
-
 
     # sms_with_sender_id = send_sms_notification_test_response(client_using_team_key, sms_sender_id)
     # email_with_reply_id = send_email_notification_test_response(client, email_reply_to_id)

@@ -319,7 +319,7 @@ def test_send_bulk_notifications_with_rows(rmock, notifications_client):
     rows = [
         ["email address", "name"],
         ["radouane.boutiri-ext@mcn.gouv.qc.ca", "Alice"],
-        ["radouane.boutiri-ext@mcn.gouv.qc.ca", "Wok"]
+        ["radouane.boutiri-ext@mcn.gouv.qc.ca", "Wok"],
     ]
     reference = "bulk_ref_test_rows"
 
@@ -363,7 +363,7 @@ def test_send_bulk_notifications_with_csv(rmock, notifications_client):
     endpoint = f"{TEST_HOST}/v2/notifications/bulk"
     template_id = "template-id-123"
     name = "Bulk send sms with personalisation"
-    csv_data = "phone number,name\n5144442233,Alice\5142231234,Wok"
+    csv_data = "phone number,name\n5144442233,Alice\n5142231234,Wok"
     reference = "bulk_ref_test_csv"
 
     # Mock de la réponse de l'API
