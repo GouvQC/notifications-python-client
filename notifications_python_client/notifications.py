@@ -49,6 +49,38 @@ class NotificationsAPIClient(BaseAPIClient):
         }
         return self.post("/v2/notifications/email", data=notification)
 
+    def send_bulk_notifications(
+        self, template_id, name, rows=None, csv=None, reference=None, scheduled_for=None, reply_to_id=None
+    ):
+        """
+        Envoie de notifications en masse.
+        :param template_id: ID du gabarit utilisé pour les notifications.
+        :param name: Nom de l'envoi en masse.
+        :param rows: (optionnel) Liste des lignes de données pour les notifications.
+                     La première ligne doit contenir les en-têtes.
+        :param csv: (optionnel) Données CSV encodées en base64.
+        :param reference: (optionnel) Référence unique pour identifier l'envoi en masse.
+        :param scheduled_for: (optionnel) Date et heure de planification de l'envoi (format ISO 8601).
+        :param reply_to_id: (optionnel) ID de l'adresse de réponse.
+        :return: Résultat de l'appel API POST.
+        """
+        if not rows and not csv:
+            raise ValueError("Vous devez fournir soit 'rows', soit 'csv'.")
+        if rows and csv:
+            raise ValueError("Vous ne pouvez pas fournir à la fois 'rows' et 'csv'.")
+
+        data = {
+            "template_id": template_id,
+            "name": name,
+            **({"rows": rows} if rows else {}),
+            **({"csv": csv} if csv else {}),
+            **({"reference": reference} if reference else {}),
+            **({"scheduled_for": scheduled_for} if scheduled_for else {}),
+            **({"reply_to_id": reply_to_id} if reply_to_id else {}),
+        }
+
+        return self.post("/v2/notifications/bulk", data=data)
+
     def get_notification_by_id(self, id):
         """
         Récupère les détails d'une notification spécifique par son ID.
@@ -135,3 +167,10 @@ class NotificationsAPIClient(BaseAPIClient):
             params["type"] = template_type
 
         return self.get("/v2/templates", params=params)
+
+    def check_health(self):
+        """
+        Vérifie l'état de santé du service.
+        :return: Réponse JSON contenant le statut de santé.
+        """
+        return self.get("/health")

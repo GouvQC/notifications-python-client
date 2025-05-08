@@ -1,4 +1,5 @@
 from tests.conftest import TEST_HOST
+import pytest
 
 
 def test_get_notification_by_id(notifications_client, rmock):
@@ -215,6 +216,199 @@ def test_get_all_templates_by_type(notifications_client, rmock):
     notifications_client.get_all_templates("type")
 
     assert rmock.called
+
+
+@pytest.mark.parametrize(
+    "rows, csv, expected_error",
+    [
+        # Cas où `rows` est fourni
+        (
+            [["email address", "name"], ["Alice@exemple.ca", "Alice"], ["Wok@exemple.ca", "Wok"]],
+            None,
+            None,
+        ),
+        # Cas où `csv` est fourni
+        (
+            None,
+            "phone number,name\n5142346159,Alice\n5140001122,Wok",
+            None,
+        ),
+        # Cas où ni `rows` ni `csv` ne sont fournis
+        (None, None, ValueError),
+        # Cas où les deux `rows` et `csv` sont fournis
+        (
+            [["phone number", "name"], ["n5142346159", "Alice"], ["n5140001122", "Wok"]],
+            "phone number,name\n5142346159,Alice\n5140001122,Wok",
+            ValueError,
+        ),
+    ],
+)
+def test_send_bulk_notifications_validation(rows, csv, expected_error, notifications_client, rmock):
+    """
+    Teste la validation des paramètres `rows` et `csv` pour la méthode send_bulk_notifications.
+    """
+    endpoint = f"{TEST_HOST}/v2/notifications/bulk"
+    template_id = "template-id-123"
+    name = "Test Bulk Notification"
+    reference = "bulk_ref_test"
+
+    if expected_error:
+        # Vérifie que l'exception attendue est levée
+        with pytest.raises(expected_error):
+            notifications_client.send_bulk_notifications(
+                template_id=template_id,
+                name=name,
+                rows=rows,
+                csv=csv,
+                reference=reference,
+            )
+    else:
+        # Mock de la réponse de l'API
+        rmock.request(
+            "POST",
+            endpoint,
+            json={
+                "data": {
+                    "id": "bulk-notification-id",
+                    "job_status": "pending",
+                    "notification_count": 2,
+                    "original_file_name": name,
+                    "template": template_id,
+                    "template_version": 1,
+                }
+            },
+            status_code=201,
+        )
+
+        # Appel de la méthode avec des paramètres valides
+        response = notifications_client.send_bulk_notifications(
+            template_id=template_id,
+            name=name,
+            rows=rows,
+            csv=csv,
+            reference=reference,
+        )
+
+        # Vérifie que le mock a été appelé
+        assert rmock.called
+        assert rmock.last_request.json() == {
+            "template_id": template_id,
+            "name": name,
+            **({"rows": rows} if rows else {}),
+            **({"csv": csv} if csv else {}),
+            "reference": reference,
+        }
+
+        # Vérifie que la réponse contient les données simulées
+        assert response["data"]["id"] == "bulk-notification-id"
+        assert response["data"]["job_status"] == "pending"
+        assert response["data"]["notification_count"] == 2
+        assert response["data"]["original_file_name"] == name
+        assert response["data"]["template"] == template_id
+        assert response["data"]["template_version"] == 1
+
+
+def test_send_bulk_notifications_with_rows(rmock, notifications_client):
+    """
+    Teste l'envoi de notifications email en masse avec des lignes de données (rows).
+    """
+    endpoint = f"{TEST_HOST}/v2/notifications/bulk"
+    template_id = "template-id-123"
+    name = "Bulk send email with personalisation"
+    rows = [
+        ["email address", "name"],
+        ["radouane.boutiri-ext@mcn.gouv.qc.ca", "Alice"],
+        ["radouane.boutiri-ext@mcn.gouv.qc.ca", "Wok"]
+    ]
+    reference = "bulk_ref_test_rows"
+
+    # Mock de la réponse de l'API
+    rmock.request(
+        "POST",
+        endpoint,
+        json={
+            "data": {
+                "id": "bulk-notification-id",
+                "job_status": "pending",
+                "notification_count": 2,
+                "original_file_name": name,
+                "template": template_id,
+                "template_version": 1,
+            }
+        },
+        status_code=201,
+    )
+
+    response = notifications_client.send_bulk_notifications(
+        template_id=template_id,
+        name=name,
+        rows=rows,
+        reference=reference,
+    )
+
+    assert rmock.called
+    assert response["data"]["id"] == "bulk-notification-id"
+    assert response["data"]["job_status"] == "pending"
+    assert response["data"]["notification_count"] == 2
+    assert response["data"]["original_file_name"] == name
+    assert response["data"]["template"] == template_id
+    assert response["data"]["template_version"] == 1
+
+
+def test_send_bulk_notifications_with_csv(rmock, notifications_client):
+    """
+    Teste l'envoi de notifications sms en masse avec un fichier CSV brut.
+    """
+    endpoint = f"{TEST_HOST}/v2/notifications/bulk"
+    template_id = "template-id-123"
+    name = "Bulk send sms with personalisation"
+    csv_data = "phone number,name\n5144442233,Alice\5142231234,Wok"
+    reference = "bulk_ref_test_csv"
+
+    # Mock de la réponse de l'API
+    rmock.request(
+        "POST",
+        endpoint,
+        json={
+            "data": {
+                "id": "bulk-notification-id",
+                "job_status": "pending",
+                "notification_count": 2,
+                "original_file_name": name,
+                "template": template_id,
+                "template_version": 1,
+            }
+        },
+        status_code=201,
+    )
+
+    response = notifications_client.send_bulk_notifications(
+        template_id=template_id,
+        name=name,
+        csv=csv_data,
+        reference=reference,
+    )
+
+    assert rmock.called
+    assert response["data"]["id"] == "bulk-notification-id"
+    assert response["data"]["job_status"] == "pending"
+    assert response["data"]["notification_count"] == 2
+    assert response["data"]["original_file_name"] == name
+    assert response["data"]["template"] == template_id
+    assert response["data"]["template_version"] == 1
+
+
+def test_check_health(notifications_client, rmock):
+    """
+    Teste la méthode check_health pour vérifier l'état de santé du service.
+    """
+    endpoint = f"{TEST_HOST}/health"
+    rmock.request("GET", endpoint, json={"status": "ok"}, status_code=200)
+
+    response = notifications_client.check_health()
+
+    assert rmock.called
+    assert response["status"] == "ok"
 
 
 def _generate_response(next_link_uuid, notifications: list):

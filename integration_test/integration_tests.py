@@ -41,6 +41,62 @@ def send_sms_notification_test_response(python_client, sender_id=None):
     return response["id"]
 
 
+def send_bulk_notifications_with_rows(notifications_client):
+    """
+    Teste l'envoi de notifications en masse via l'API.
+    """
+    template_id = os.environ["SMS_TEMPLATE_ID"]
+    name = "Test Bulk Notification Integration"
+    rows = [
+        ["phone number", "name"],
+        [os.environ["FUNCTIONAL_TEST_NUMBER"], "Alice"],
+        [os.environ["FUNCTIONAL_TEST_NUMBER"], "Wok"],
+    ]
+    reference = "bulk_ref_integration_test"
+
+    # Appel de la méthode send_bulk_notifications
+    response = notifications_client.send_bulk_notifications(
+        template_id=template_id,
+        name=name,
+        rows=rows,
+        reference=reference,
+    )
+
+    # Validation de la réponse
+    assert response["status_code"] == 201
+    assert response["data"]["id"] is not None
+    assert response["data"]["notification_count"] == 2
+    assert response["data"]["original_file_name"] == name
+    assert response["data"]["template"] == template_id
+
+
+def send_bulk_notifications_with_csv(notifications_client):
+    """
+    Teste l'envoi de notifications en masse avec un fichier CSV brut.
+    """
+    template_id = os.environ["EMAIL_TEMPLATE_ID"]
+    functional_test_email = os.environ["FUNCTIONAL_TEST_EMAIL"]
+    
+    name = "Bulk send email with personalisation"
+    csv_data = f"email,name\n{functional_test_email},Alice\n{functional_test_email},Wok"
+    reference = "bulk_ref_integration_test_csv"
+
+    # Appel de la méthode send_bulk_notifications
+    response = notifications_client.send_bulk_notifications(
+        template_id=template_id,
+        name=name,
+        csv=csv_data,
+        reference=reference,
+    )
+
+    # Validation de la réponse
+    assert response["status_code"] == 201
+    assert response["data"]["id"] is not None
+    assert response["data"]["notification_count"] == 2
+    assert response["data"]["original_file_name"] == name
+    assert response["data"]["template"] == template_id
+
+
 def send_email_notification_test_response(python_client, reply_to=None):
     email_address = os.environ["FUNCTIONAL_TEST_EMAIL"]
     template_id = os.environ["EMAIL_TEMPLATE_ID"]
@@ -150,6 +206,19 @@ def retry_get_notification_by_id(python_client, id, notification_type, max_retri
     raise RuntimeError(f"Notification {id} not found after {max_retries} retries")
 
 
+def check_health_integration(notifications_client):
+    """
+    Teste l'intégration de la méthode check_health avec l'API réelle.
+    """
+    response = notifications_client.check_health()
+
+    assert response["status"] in ["ok", "unavailable"]
+    if response["status"] == "unavailable":
+        assert response.status_code == 503
+    else:
+        assert response.status_code == 200
+
+
 def test_integration():
     print("API_KEY -36::", os.environ["API_KEY"][-36:])
     client = NotificationsAPIClient(
@@ -170,6 +239,11 @@ def test_integration():
     assert email_reply_to_id
 
     version_number = 1
+
+    check_health_integration(client)
+
+    send_bulk_notifications_with_rows(client)
+    send_bulk_notifications_with_csv(client)
 
     sms_id = send_sms_notification_test_response(client)
     print("SMS ID envoyé par le test:", sms_id)
