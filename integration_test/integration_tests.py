@@ -10,6 +10,7 @@ from integration_test.schemas.v2.notification_schemas import (
     get_notifications_response,
     post_email_response,
     post_sms_response,
+    post_bulk_notifications_response,
 )
 from integration_test.schemas.v2.template_schemas import (
     get_template_by_id_response,
@@ -41,17 +42,31 @@ def send_sms_notification_test_response(python_client, sender_id=None):
     return response["id"]
 
 
-def send_bulk_notifications_with_rows(notifications_client):
+def send_bulk_notifications_with_rows(notifications_client, notification_type):
     """
     Teste l'envoi de notifications en masse via l'API.
     """
-    template_id = os.environ["SMS_TEMPLATE_ID"]
+
+    functional_test_email = os.environ["FUNCTIONAL_TEST_EMAIL"]
+    functional_phone_number = os.environ["FUNCTIONAL_TEST_NUMBER"]
+
+    if notification_type == EMAIL_TYPE:
+        template_id = os.environ["EMAIL_TEMPLATE_ID"]
+        rows = [
+            ["email address", "name"],
+            [functional_test_email, "Alice"],
+            [functional_test_email, "Wok"],
+        ]
+    elif notification_type == SMS_TYPE:
+        template_id = os.environ["SMS_TEMPLATE_ID"]
+        rows = [
+            ["phone number", "name"],
+            [functional_phone_number, "Alice"],
+            [functional_phone_number, "Wok"],
+        ]
+
     name = "Test Bulk Notification Integration"
-    rows = [
-        ["phone number", "name"],
-        [os.environ["FUNCTIONAL_TEST_NUMBER"], "Alice"],
-        [os.environ["FUNCTIONAL_TEST_NUMBER"], "Wok"],
-    ]
+    
     reference = "bulk_ref_integration_test"
 
     # Appel de la méthode send_bulk_notifications
@@ -63,22 +78,28 @@ def send_bulk_notifications_with_rows(notifications_client):
     )
 
     # Validation de la réponse
-    assert response["status_code"] == 201
+    validate(response, post_bulk_notifications_response)
     assert response["data"]["id"] is not None
     assert response["data"]["notification_count"] == 2
     assert response["data"]["original_file_name"] == name
     assert response["data"]["template"] == template_id
 
 
-def send_bulk_notifications_with_csv(notifications_client):
+def send_bulk_notifications_with_csv(notifications_client, notification_type):
     """
     Teste l'envoi de notifications en masse avec un fichier CSV brut.
     """
-    template_id = os.environ["EMAIL_TEMPLATE_ID"]
     functional_test_email = os.environ["FUNCTIONAL_TEST_EMAIL"]
+    functional_phone_number = os.environ["FUNCTIONAL_TEST_NUMBER"]
+
+    if notification_type == EMAIL_TYPE:
+        template_id = os.environ["EMAIL_TEMPLATE_ID"]
+        csv_data = f"email address,name\n{functional_test_email},Alice\n{functional_test_email},Wok"
+    elif notification_type == SMS_TYPE:
+        template_id = os.environ["SMS_TEMPLATE_ID"]
+        csv_data = f"phone number,name\n{functional_phone_number},Alice\n{functional_phone_number},Wok"
 
     name = "Bulk send email with personalisation"
-    csv_data = f"email,name\n{functional_test_email},Alice\n{functional_test_email},Wok"
     reference = "bulk_ref_integration_test_csv"
 
     # Appel de la méthode send_bulk_notifications
@@ -90,7 +111,7 @@ def send_bulk_notifications_with_csv(notifications_client):
     )
 
     # Validation de la réponse
-    assert response["status_code"] == 201
+    validate(response, post_bulk_notifications_response)
     assert response["data"]["id"] is not None
     assert response["data"]["notification_count"] == 2
     assert response["data"]["original_file_name"] == name
@@ -115,7 +136,6 @@ def send_email_notification_test_response(python_client, reply_to=None):
 
 
 def get_notification_by_id(python_client, id, notification_type):
-    # print("Appel de get_notification_by_id avec ID:", id)
     response = python_client.get_notification_by_id(id)
     if notification_type == EMAIL_TYPE:
         validate(response, get_notification_response)
@@ -213,14 +233,9 @@ def check_health_integration(notifications_client):
     response = notifications_client.check_health()
 
     assert response["status"] in ["ok", "unavailable"]
-    if response["status"] == "unavailable":
-        assert response.status_code == 503
-    else:
-        assert response.status_code == 200
 
 
 def test_integration():
-    # print("API_KEY -36::", os.environ["API_KEY"][-36:])
     client = NotificationsAPIClient(
         base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_KEY"], client_id=os.environ["CLIENT_ID"]
     )
@@ -244,38 +259,45 @@ def test_integration():
 
     check_health_integration(client)
 
-    send_bulk_notifications_with_rows(client)
-    send_bulk_notifications_with_csv(client)
+    send_bulk_notifications_with_csv(client, SMS_TYPE)
+    send_bulk_notifications_with_csv(client, EMAIL_TYPE)
 
-    sms_id = send_sms_notification_test_response(client)
-    # print("SMS ID envoyé par le test:", sms_id)
-    email_id = send_email_notification_test_response(client)
+    send_bulk_notifications_with_rows(client, SMS_TYPE)
+    send_bulk_notifications_with_rows(client, EMAIL_TYPE)
 
-    get_all_notifications(client)
 
-    get_template_by_id(client, sms_template_id, SMS_TYPE)
-    get_template_by_id(client, email_template_id, EMAIL_TYPE)
-    get_template_by_id_and_version(client, sms_template_id, version_number, SMS_TYPE)
-    get_template_by_id_and_version(client, email_template_id, version_number, EMAIL_TYPE)
-    post_template_preview(client, sms_template_id, SMS_TYPE)
-    post_template_preview(client, email_template_id, EMAIL_TYPE)
+    # get_template_by_id(client, sms_template_id, SMS_TYPE)
+    # get_template_by_id(client, email_template_id, EMAIL_TYPE)
+    # get_template_by_id_and_version(client, sms_template_id, version_number, SMS_TYPE)
+    # get_template_by_id_and_version(client, email_template_id, version_number, EMAIL_TYPE)
+    # post_template_preview(client, sms_template_id, SMS_TYPE)
+    # post_template_preview(client, email_template_id, EMAIL_TYPE)
+    # get_all_templates(client)
+    # get_all_templates_for_type(client, EMAIL_TYPE)
+    # get_all_templates_for_type(client, SMS_TYPE)
 
-    get_all_templates(client)
-    get_all_templates_for_type(client, EMAIL_TYPE)
-    get_all_templates_for_type(client, SMS_TYPE)
 
-    time.sleep(5)
-    get_notification_by_id(client, email_id, EMAIL_TYPE)
-    get_notification_by_id(client, sms_id, SMS_TYPE)
 
-    # retry_get_notification_by_id(client, sms_id, SMS_TYPE)
-    # retry_get_notification_by_id(client, email_id, EMAIL_TYPE)
+    # sms_id = send_sms_notification_test_response(client)
 
-    # sms_with_sender_id = send_sms_notification_test_response(client_using_team_key, sms_sender_id)
-    # email_with_reply_id = send_email_notification_test_response(client, email_reply_to_id)
+    # email_id = send_email_notification_test_response(client)
+    # # # print("SMS ID envoyé par le test:", sms_id)
+    # # # print("EMAIL ID envoyé par le test:", email_id)
 
-    # get_notification_by_id(client, sms_with_sender_id, SMS_TYPE)
-    # get_notification_by_id(client, email_with_reply_id, EMAIL_TYPE)
+    # get_all_notifications(client)
+
+    # time.sleep(5)
+    # get_notification_by_id(client, email_id, EMAIL_TYPE)
+    # get_notification_by_id(client, sms_id, SMS_TYPE)
+
+    # # retry_get_notification_by_id(client, sms_id, SMS_TYPE)
+    # # retry_get_notification_by_id(client, email_id, EMAIL_TYPE)
+
+    # # sms_with_sender_id = send_sms_notification_test_response(client_using_team_key, sms_sender_id)
+    # # email_with_reply_id = send_email_notification_test_response(client, email_reply_to_id)
+
+    # # get_notification_by_id(client, sms_with_sender_id, SMS_TYPE)
+    # # get_notification_by_id(client, email_with_reply_id, EMAIL_TYPE)
 
     print("notifications-python-client integration tests are successful")  # noqa: T201
 

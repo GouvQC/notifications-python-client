@@ -160,6 +160,140 @@ post_email_response = {
     "required": ["id", "content", "uri", "template"],
 }
 
+post_bulk_notifications_response = {
+    "description": "Réponse de la route permettant de créer ou envoyer une notification en masse",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "description": "Données du job créé ou envoyé",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant unique du job",
+                },
+                "api_key": {
+                    "type": "object",
+                    "description": "Détails de la clé API utilisée pour ce job",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Identifiant de la clé API",
+                        },
+                        "key_type": {
+                            "type": "string",
+                            "enum": ["team", "live", "test"],
+                            "description": "Type de la clé API",
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Nom de la clé API",
+                        },
+                    },
+                    "required": ["id", "key_type", "name"],
+                },
+                "archived": {
+                    "type": "boolean",
+                    "description": "Indique si le job est archivé",
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Horodatage de la création du job",
+                },
+                "updated_at": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Horodatage de la dernière mise à jour du job",
+                },
+                "created_by": {
+                    "type": "object",
+                    "description": "Informations sur l'utilisateur ayant créé le job",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Identifiant de l'utilisateur",
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Nom de l'utilisateur",
+                        },
+                    },
+                    "required": ["id", "name"],
+                },
+                "job_status": {
+                    "type": "string",
+                    "enum": ["pending", "in-progress", "completed", "failed"],
+                    "description": "Statut du job",
+                },
+                "notification_count": {
+                    "type": "integer",
+                    "description": "Nombre de notifications générées par le job",
+                },
+                "original_file_name": {
+                    "type": "string",
+                    "description": "Nom du fichier utilisé pour le job",
+                },
+                "processing_started": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Horodatage du début du traitement",
+                },
+                "processing_finished": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Horodatage de la fin du traitement",
+                },
+                "scheduled_for": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Date et heure de planification du job",
+                },
+                "sender_id": {
+                    "type": ["string", "null"],
+                    "format": "uuid",
+                    "description": "Identifiant de l'expéditeur",
+                },
+                "service": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant du service associé au job",
+                },
+                "service_name": {
+                    "type": "object",
+                    "description": "Nom du service associé au job",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Nom du service",
+                        },
+                    },
+                    "required": ["name"],
+                },
+                "template": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant du gabarit utilisé pour le job",
+                },
+                "template_version": {
+                    "type": "integer",
+                    "description": "Version du gabarit utilisé",
+                },
+            },
+            "required": [
+                "id", "api_key", "archived", "created_at", "created_by",
+                "job_status", "notification_count", "original_file_name",
+                "service", "service_name", "template", "template_version"
+            ],
+        }
+    },
+    "required": ["data"],
+    "additionalProperties": False,
+}
+
 
 def create_post_sms_response_from_notification(notification, body, from_number, url_root):
     return {
