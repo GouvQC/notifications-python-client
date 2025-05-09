@@ -11,7 +11,7 @@ export SERVICE_ID="votre-service-id-ici"
 export CLIENT_ID="votre-client-id-ici"
 
 # Numéro de téléphone utilisé pour les tests fonctionnels
-export FUNCTIONAL_TEST_NUMBER="5140000000"
+export FUNCTIONAL_TEST_NUMBER="numero-membre-equipe-service"
 
 # Adresse courriel utilisée pour les tests fonctionnels
 export FUNCTIONAL_TEST_EMAIL="exemple@domaine.com"
