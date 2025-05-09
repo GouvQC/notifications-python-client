@@ -27,7 +27,7 @@ test: ## Run tests
 
 .PHONY: integration-test
 integration-test: ## Run integration tests
-	python -m integration_test.integration_tests
+	source environment.sh && python -m integration_test.integration_tests
 
 .PHONY: build-wheel
 build-wheel: ## build distributable wheel

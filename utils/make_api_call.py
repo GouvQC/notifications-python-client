@@ -2,8 +2,11 @@
 """
 
 Usage:
-    make_api_call.py <base_url> <client-id> <secret> send-bulk --type=<type> --template-id=<id> --name=<name> --reference=<ref> [--csv=<csv>] [--rows=<rows>]
-    make_api_call.py <base_url> <client-id> <secret> create --type=<type> --template=<id> --name=<name> --reference=<ref> [--to=<to>] [--personalisation=<json>] [--sms_sender_id=<sender_id>]
+    make_api_call.py <base_url> <client-id> <secret> send-bulk --type=<type> --template-id=<id> \
+        --name=<name> --reference=<ref> [--csv=<csv>] [--rows=<rows>]
+    make_api_call.py <base_url> <client-id> <secret> create --type=<type> --template=<id> \
+        --name=<name> --reference=<ref> [--to=<to>] [--personalisation=<json>] \
+        [--sms_sender_id=<sender_id>]
     make_api_call.py <base_url> <client-id> <secret> fetch
     make_api_call.py <base_url> <client-id> <secret> fetch-all
     make_api_call.py <base_url> <client-id> <secret> fetch-generator
@@ -26,9 +29,12 @@ Options:
     --rows=<rows>               Raw rows data in JSON format for bulk send (optional, prompted if not provided).
 
 Example:
-    ./make_api_call.py http://api my_service super_secret send-bulk --type=email --template-id=123 --name="Bulk Email" --reference="ref001" --csv="email@example.com,name\nuser@example.com,Alice"
-    ./make_api_call.py http://api my_service super_secret send-bulk --type=sms --template-id=456 --name="Bulk SMS" --reference="ref002" --csv="+1234567890,name\n+1234567891,Bob"
-    ./make_api_call.py http://api my_service super_secret create --type=email --template=123 --name="New Notification" --reference="ref003" --to="user@example.com"
+    ./make_api_call.py http://api my_service super_secret send-bulk --type=email --template-id=123 \
+        --name="Bulk Email" --reference="ref001" --csv="email address,name\nuser@example.com,Alice"
+    ./make_api_call.py http://api my_service super_secret send-bulk --type=sms  --template-id=456 \
+       --name="Bulk SMS" --reference="ref002" --csv="phone number,name\n+1234567891,Bob\n+1234567891,Alice"
+    ./make_api_call.py http://api my_service super_secret create --type=email --template=123 \
+        --name="New Notification" --reference="ref003" --to="user@example.com"
 
 """
 
@@ -156,7 +162,9 @@ def send_bulk_notifications(notifications_client, **kwargs):
             csv_data = input("Enter csv data for emails (e.g. 'email address,name\\nuser@example.com,Alice'): ")
 
         if not rows_data:
-            rows_data = input("Enter rows data for emails (e.g. [['email address', 'name'], ['user@example.com', 'Alice']]): ")
+            rows_data = input(
+                "Enter rows data for emails (e.g. [['email address', 'name'], ['user@example.com', 'Alice']]): "
+            )
 
     # Si le type est 'sms'
     elif notification_type == "sms":
@@ -200,10 +208,13 @@ def send_bulk_notifications(notifications_client, **kwargs):
 def check_health(notifications_client):
     return notifications_client.check_health()
 
+
 if __name__ == "__main__":
     arguments = docopt(__doc__)
 
-    client = NotificationsAPIClient(base_url=arguments["<base_url>"], client_id=arguments["<client-id>"], api_key=arguments["<secret>"])
+    client = NotificationsAPIClient(
+        base_url=arguments["<base_url>"], client_id=arguments["<client-id>"], api_key=arguments["<secret>"]
+    )
 
     if arguments["<call>"] == "health":
         pprint(check_health(notifications_client=client))
@@ -211,10 +222,9 @@ if __name__ == "__main__":
     if arguments["<call>"] == "send-bulk":
         pprint(
             send_bulk_notifications(
-                notifications_client=client,
-                **{k: arguments[k] for k in arguments if k.startswith("--")}
+                notifications_client=client, **{k: arguments[k] for k in arguments if k.startswith("--")}
             )
-    )
+        )
 
     if arguments["<call>"] == "create":
         pprint(

@@ -284,9 +284,18 @@ post_bulk_notifications_response = {
                 },
             },
             "required": [
-                "id", "api_key", "archived", "created_at", "created_by",
-                "job_status", "notification_count", "original_file_name",
-                "service", "service_name", "template", "template_version"
+                "id",
+                "api_key",
+                "archived",
+                "created_at",
+                "created_by",
+                "job_status",
+                "notification_count",
+                "original_file_name",
+                "service",
+                "service_name",
+                "template",
+                "template_version",
             ],
         }
     },

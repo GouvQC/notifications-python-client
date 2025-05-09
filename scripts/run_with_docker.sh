@@ -6,8 +6,6 @@ docker run \
   --rm \
   -v "`pwd`:/var/project" \
   -v "`pwd`/tox-python-versions:/var/project/.python-version" \
-  -v "`pwd`/certs:/certs" \
-  -e REQUESTS_CA_BUNDLE=/certs/fullchain.crt \
   -e NOTIFY_API_URL=${NOTIFY_API_URL} \
   -e API_KEY=${API_KEY} \
   -e FUNCTIONAL_TEST_NUMBER=${FUNCTIONAL_TEST_NUMBER} \

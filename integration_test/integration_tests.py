@@ -8,9 +8,9 @@ from integration_test.enums import EMAIL_TYPE, SMS_TYPE
 from integration_test.schemas.v2.notification_schemas import (
     get_notification_response,
     get_notifications_response,
+    post_bulk_notifications_response,
     post_email_response,
     post_sms_response,
-    post_bulk_notifications_response,
 )
 from integration_test.schemas.v2.template_schemas import (
     get_template_by_id_response,
@@ -66,7 +66,7 @@ def send_bulk_notifications_with_rows(notifications_client, notification_type):
         ]
 
     name = "Test Bulk Notification Integration"
-    
+
     reference = "bulk_ref_integration_test"
 
     # Appel de la méthode send_bulk_notifications
@@ -207,23 +207,46 @@ def get_all_templates_for_type(python_client, template_type):
     validate(response, get_all_template_response)
 
 
-def retry_get_notification_by_id(python_client, id, notification_type, max_retries=5, delay=3):
-    from requests.exceptions import HTTPError
+def retry_get_notification_by_id(client, notification_id, notification_type, max_retries=12, delay=5):
+    """
+    Retry fetching a notification by ID until a 200 response is received or the maximum retries are reached.
 
-    for _attempt in range(max_retries):
+    Args:
+        client: The API client used to make the request.
+        notification_id: The ID of the notification to fetch.
+        notification_type: The type of the notification (e.g., SMS_TYPE, EMAIL_TYPE).
+        max_retries: Maximum number of retries before giving up.
+        delay: Delay (in seconds) between retries.
+
+    Returns:
+        The response object if a 200 status code is received.
+
+    Raises:
+        Exception: If the maximum retries are reached without receiving a 200 response.
+    """
+    for attempt in range(1, max_retries + 1):
         try:
-            response = python_client.get_notification_by_id(id)
-            if notification_type == EMAIL_TYPE or notification_type == SMS_TYPE:
+            print(f"Attempt {attempt}: Fetching notification {notification_id} (type: {notification_type})...")  # noqa: T201
+            response = client.get_notification_by_id(notification_id)
+
+            if notification_type == EMAIL_TYPE:
                 validate(response, get_notification_response)
-                return
+            elif notification_type == SMS_TYPE:
+                validate(response, get_notification_response)
             else:
                 raise KeyError("notification type should be email|sms")
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                time.sleep(delay)
-            else:
-                raise
-    raise RuntimeError(f"Notification {id} not found after {max_retries} retries")
+
+            if response and "id" in response and response["id"] == notification_id:
+                print(f"Notification {notification_id} found after {attempt * delay} seconds.")  # noqa: T201
+                return response
+
+        except Exception as e:
+            print(f"Attempt {attempt}: Error while fetching notification {notification_id}. Error: {e}")  # noqa: T201
+
+        print(f"Retrying in {delay} seconds...")  # noqa: T201
+        time.sleep(delay)
+
+    raise Exception(f"Notification {notification_id} not found after {max_retries * delay} seconds.")
 
 
 def check_health_integration(notifications_client):
@@ -239,11 +262,6 @@ def test_integration():
     client = NotificationsAPIClient(
         base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_KEY"], client_id=os.environ["CLIENT_ID"]
     )
-    # client_using_team_key = NotificationsAPIClient(
-    #     base_url=os.environ["NOTIFY_API_URL"],
-    #     api_key=os.environ["API_SENDING_KEY"],
-    #     client_id=os.environ["CLIENT_ID"]
-    # )
 
     sms_template_id = os.environ["SMS_TEMPLATE_ID"]
     sms_sender_id = os.environ["SMS_SENDER_ID"]
@@ -265,39 +283,23 @@ def test_integration():
     send_bulk_notifications_with_rows(client, SMS_TYPE)
     send_bulk_notifications_with_rows(client, EMAIL_TYPE)
 
+    get_template_by_id(client, sms_template_id, SMS_TYPE)
+    get_template_by_id(client, email_template_id, EMAIL_TYPE)
+    get_template_by_id_and_version(client, sms_template_id, version_number, SMS_TYPE)
+    get_template_by_id_and_version(client, email_template_id, version_number, EMAIL_TYPE)
+    post_template_preview(client, sms_template_id, SMS_TYPE)
+    post_template_preview(client, email_template_id, EMAIL_TYPE)
+    get_all_templates(client)
+    get_all_templates_for_type(client, EMAIL_TYPE)
+    get_all_templates_for_type(client, SMS_TYPE)
 
-    # get_template_by_id(client, sms_template_id, SMS_TYPE)
-    # get_template_by_id(client, email_template_id, EMAIL_TYPE)
-    # get_template_by_id_and_version(client, sms_template_id, version_number, SMS_TYPE)
-    # get_template_by_id_and_version(client, email_template_id, version_number, EMAIL_TYPE)
-    # post_template_preview(client, sms_template_id, SMS_TYPE)
-    # post_template_preview(client, email_template_id, EMAIL_TYPE)
-    # get_all_templates(client)
-    # get_all_templates_for_type(client, EMAIL_TYPE)
-    # get_all_templates_for_type(client, SMS_TYPE)
+    sms_id = send_sms_notification_test_response(client)
+    email_id = send_email_notification_test_response(client)
 
+    get_all_notifications(client)
 
-
-    # sms_id = send_sms_notification_test_response(client)
-
-    # email_id = send_email_notification_test_response(client)
-    # # # print("SMS ID envoyé par le test:", sms_id)
-    # # # print("EMAIL ID envoyé par le test:", email_id)
-
-    # get_all_notifications(client)
-
-    # time.sleep(5)
-    # get_notification_by_id(client, email_id, EMAIL_TYPE)
-    # get_notification_by_id(client, sms_id, SMS_TYPE)
-
-    # # retry_get_notification_by_id(client, sms_id, SMS_TYPE)
-    # # retry_get_notification_by_id(client, email_id, EMAIL_TYPE)
-
-    # # sms_with_sender_id = send_sms_notification_test_response(client_using_team_key, sms_sender_id)
-    # # email_with_reply_id = send_email_notification_test_response(client, email_reply_to_id)
-
-    # # get_notification_by_id(client, sms_with_sender_id, SMS_TYPE)
-    # # get_notification_by_id(client, email_with_reply_id, EMAIL_TYPE)
+    retry_get_notification_by_id(client, email_id, EMAIL_TYPE)
+    retry_get_notification_by_id(client, sms_id, SMS_TYPE)
 
     print("notifications-python-client integration tests are successful")  # noqa: T201
 
