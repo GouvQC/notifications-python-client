@@ -2,39 +2,38 @@
 """
 
 Usage:
-    make_api_call.py <base_url> <client-id> <secret> send-bulk --type=<type> --template-id=<id> \
-        --name=<name> --reference=<ref> [--csv=<csv>] [--rows=<rows>]
-    make_api_call.py <base_url> <client-id> <secret> create --type=<type> --template=<id> \
-        --name=<name> --reference=<ref> [--to=<to>] [--personalisation=<json>] \
-        [--sms_sender_id=<sender_id>]
-    make_api_call.py <base_url> <client-id> <secret> fetch
-    make_api_call.py <base_url> <client-id> <secret> fetch-all
-    make_api_call.py <base_url> <client-id> <secret> fetch-generator
-    make_api_call.py <base_url> <client-id> <secret> preview
-    make_api_call.py <base_url> <client-id> <secret> template
-    make_api_call.py <base_url> <client-id> <secret> all_templates
-    make_api_call.py <base_url> <client-id> <secret> template_version
-    make_api_call.py <base_url> <client-id> <secret> all_template_versions
+  make_api_call.py <base_url> <client-id> <secret> health
+  make_api_call.py <base_url> <client-id> <secret> fetch
+  make_api_call.py <base_url> <client-id> <secret> fetch-all
+  make_api_call.py <base_url> <client-id> <secret> fetch-generator
+  make_api_call.py <base_url> <client-id> <secret> preview
+  make_api_call.py <base_url> <client-id> <secret> template
+  make_api_call.py <base_url> <client-id> <secret> all_templates
+  make_api_call.py <base_url> <client-id> <secret> template_version
+  make_api_call.py <base_url> <client-id> <secret> all_template_versions
+  make_api_call.py <base_url> <client-id> <secret> send-bulk --type=<type> --template-id=<id> \
+    --name=<name> --reference=<ref> [--csv=<csv>] [--rows=<rows>]
+  make_api_call.py <base_url> <client-id> <secret> create --type=<type> --template=<id> \
+    --name=<name> --reference=<ref> [--to=<to>] [--personalisation=<json>] [--sms_sender_id=<sender_id>]
 
 Options:
-    --type=<type>               Type of notification: email or sms.
-    --to=<phone_number|email>   Target phone number or email for individual notification.
-    --personalisation=<{}>      JSON object for dynamic data insertion in the notification.
-    --sms_sender_id=<id>        SMS sender ID, if applicable.
-    --template-id=<id>          ID of the template to use for the notification.
-    --template=<id>             Alternative template ID (use either --template-id or --template).
-    --name=<name>               Name of the bulk send.
-    --reference=<ref>           Reference string for this bulk send.
-    --csv=<csv>                 Raw CSV content for bulk send (optional, prompted if not provided).
-    --rows=<rows>               Raw rows data in JSON format for bulk send (optional, prompted if not provided).
+  --type=<type>               Type of notification: email or sms.
+  --to=<phone|email>          Target phone number or email for individual notification.
+  --personalisation=<json>   JSON object for dynamic fields in the notification.
+  --sms_sender_id=<id>        SMS sender ID if applicable.
+  --template-id=<id>          Template ID (for bulk).
+  --template=<id>             Template ID (for single send).
+  --name=<name>               Name for bulk send.
+  --reference=<ref>           Reference string.
+  --csv=<csv>                 CSV data inline.
+  --rows=<rows>               Rows data in JSON.
 
-Example:
-    ./make_api_call.py http://api my_service super_secret send-bulk --type=email --template-id=123 \
-        --name="Bulk Email" --reference="ref001" --csv="email address,name\nuser@example.com,Alice"
-    ./make_api_call.py http://api my_service super_secret send-bulk --type=sms  --template-id=456 \
-       --name="Bulk SMS" --reference="ref002" --csv="phone number,name\n+1234567891,Bob\n+1234567891,Alice"
-    ./make_api_call.py http://api my_service super_secret create --type=email --template=123 \
-        --name="New Notification" --reference="ref003" --to="user@example.com"
+Examples:
+  make_api_call.py https://api client-id secret health
+  make_api_call.py https://api client-id secret send-bulk --type=email --template-id=123 \
+      --name="Promo" --reference="ref001" --csv="email address,name\nuser@example.com,Alice"
+  make_api_call.py https://api client-id secret create --type=sms --template=456 \
+      --name="OTP" --reference="ref002" --to="+123456789" --personalisation='{"code":"123456"}'
 
 """
 
@@ -146,42 +145,37 @@ def get_template_version(notifications_client):
 
 
 def send_bulk_notifications(notifications_client, **kwargs):
-    # Récupérer le type de notification (email ou sms)
+    # Récupérer les informations principales
     notification_type = kwargs.get("--type") or input("Enter type: email | sms: ")
     template_id = kwargs.get("--template-id") or input("Enter template id: ")
     name = kwargs.get("--name") or input("Enter name: ")
     reference = kwargs.get("--reference") or input("Enter reference: ")
 
-    # Initialiser la variable de données CSV ou Rows
-    csv_data = kwargs.get("--csv")
-    rows_data = kwargs.get("--rows")
-
-    # Si le type est 'email'
-    if notification_type == "email":
-        if not csv_data:
-            csv_data = input("Enter csv data for emails (e.g. 'email address,name\\nuser@example.com,Alice'): ")
-
-        if not rows_data:
-            rows_data = input(
-                "Enter rows data for emails (e.g. [['email address', 'name'], ['user@example.com', 'Alice']]): "
-            )
-
-    # Si le type est 'sms'
-    elif notification_type == "sms":
-        if not csv_data:
-            csv_data = input("Enter csv data for SMS (e.g. 'phone number,name\\n+11234567890,Alice'): ")
-
-        if not rows_data:
-            rows_data = input("Enter rows data for SMS (e.g. [['phone number', 'name'], ['+11234567890', 'Alice']]): ")
-
-    else:
+    # Vérifier le type de notification (email ou sms)
+    if notification_type not in ["email", "sms"]:
         print("Invalid notification type. Choose either 'email' or 'sms'.")
         sys.exit(1)
 
-    # Si rows est fourni dans les arguments, essayer de le décoder
-    if rows_data:
+    # Demander quel type de données l'utilisateur souhaite envoyer : rows ou csv
+    data_type = input("Do you want to send rows or csv data? (Enter 'rows' or 'csv'): ").strip().lower()
+
+    # Exemple de champ selon le type de notification
+    if notification_type == "email":
+        field_example = "email address"  # Exemple pour email
+        value_example = "user@example.com"  # Exemple de valeur pour email
+    elif notification_type == "sms":
+        field_example = "phone number"  # Exemple pour SMS
+        value_example = "+12345023125"  # Exemple de valeur pour SMS
+
+    # Vérification de l'entrée data_type
+    if data_type == "rows":
+        rows_data = input(
+            f"Enter rows data for {notification_type}s "
+            f'(e.g. [["{field_example}", "name"], ["{value_example}", "Alice"]]): '
+        )
+        print("rows_data :", rows_data)
         try:
-            rows = json.loads(rows_data)
+            rows = json.loads(rows_data)  # Convertir en liste de listes
         except json.JSONDecodeError:
             print("Invalid --rows value. Must be a valid JSON list of lists.")
             sys.exit(1)
@@ -192,8 +186,11 @@ def send_bulk_notifications(notifications_client, **kwargs):
             reference=reference,
         )
 
-    # Si csv_data est fourni mais pas rows, appeler avec csv_data
-    if csv_data:
+    elif data_type == "csv":
+        csv_data = input(
+            f"Enter csv data for {notification_type}s (e.g. '{field_example},name\\n{value_example},Alice'): "
+        )
+        csv_data = csv_data.replace("\\n", "\n")
         return notifications_client.send_bulk_notifications(
             template_id=template_id,
             name=name,
@@ -201,8 +198,9 @@ def send_bulk_notifications(notifications_client, **kwargs):
             reference=reference,
         )
 
-    print("Either --csv or --rows must be provided.")
-    sys.exit(1)
+    else:
+        print("Invalid data type. Choose either 'rows' or 'csv'.")
+        sys.exit(1)
 
 
 def check_health(notifications_client):
@@ -216,43 +214,58 @@ if __name__ == "__main__":
         base_url=arguments["<base_url>"], client_id=arguments["<client-id>"], api_key=arguments["<secret>"]
     )
 
-    if arguments["<call>"] == "health":
-        pprint(check_health(notifications_client=client))
+    called_command = next(
+        (
+            cmd
+            for cmd in [
+                "health",
+                "send-bulk",
+                "create",
+                "fetch",
+                "fetch-all",
+                "fetch-generator",
+                "preview",
+                "template",
+                "all_templates",
+                "template_version",
+                "all_template_versions",
+            ]
+            if arguments[cmd]
+        ),
+        None,
+    )
 
-    if arguments["<call>"] == "send-bulk":
-        pprint(
-            send_bulk_notifications(
-                notifications_client=client, **{k: arguments[k] for k in arguments if k.startswith("--")}
+    # Switch/Case pour gérer l'exécution en fonction de la commande
+    match called_command:
+        case "health":
+            pprint(check_health(notifications_client=client))
+        case "send-bulk":
+            pprint(
+                send_bulk_notifications(
+                    notifications_client=client, **{k: arguments[k] for k in arguments if k.startswith("--")}
+                )
             )
-        )
-
-    if arguments["<call>"] == "create":
-        pprint(
-            create_notification(
-                notifications_client=client, **{k: arguments[k] for k in arguments if k.startswith("--")}
+        case "create":
+            pprint(
+                create_notification(
+                    notifications_client=client, **{k: arguments[k] for k in arguments if k.startswith("--")}
+                )
             )
-        )
-
-    if arguments["<call>"] == "fetch":
-        pprint(get_notification(notifications_client=client))
-
-    if arguments["<call>"] == "fetch-all":
-        pprint(get_all_notifications(notifications_client=client))
-
-    if arguments["<call>"] == "fetch-generator":
-        pprint(list(get_all_notifications_generator(notifications_client=client)))
-
-    if arguments["<call>"] == "preview":
-        pprint(preview_template(notifications_client=client))
-
-    if arguments["<call>"] == "template":
-        pprint(get_template(notifications_client=client))
-
-    if arguments["<call>"] == "all_templates":
-        pprint(get_all_templates(notifications_client=client))
-
-    if arguments["<call>"] == "template_version":
-        pprint(get_template_version(notifications_client=client))
-
-    if arguments["<call>"] == "all_template_versions":
-        pprint(get_all_template_versions(notifications_client=client))
+        case "fetch":
+            pprint(get_notification(notifications_client=client))
+        case "fetch-all":
+            pprint(get_all_notifications(notifications_client=client))
+        case "fetch-generator":
+            pprint(list(get_all_notifications_generator(notifications_client=client)))
+        case "preview":
+            pprint(preview_template(notifications_client=client))
+        case "template":
+            pprint(get_template(notifications_client=client))
+        case "all_templates":
+            pprint(get_all_templates(notifications_client=client))
+        case "template_version":
+            pprint(get_template_version(notifications_client=client))
+        case "all_template_versions":
+            pprint(get_all_template_versions(notifications_client=client))
+        case _:
+            print("Commande non reconnue.")
