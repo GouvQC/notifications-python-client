@@ -14,4 +14,3 @@ from notifications_python_client.errors import (  # noqa
     REQUEST_ERROR_STATUS_CODE,
 )
 from notifications_python_client.notifications import NotificationsAPIClient  # noqa
-from notifications_python_client.utils import prepare_upload  # noqa

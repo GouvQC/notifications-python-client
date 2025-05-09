@@ -16,21 +16,3 @@ get_inbound_sms_single_response = {
     "required": ["id", "user_number", "created_at", "service_id", "notify_number", "content"],
     "additionalProperties": False,
 }
-
-get_inbound_sms_response = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "GET list of inbound sms response schema",
-    "type": "object",
-    "properties": {
-        "received_text_messages": {"type": "array", "items": {"type": "object", "$ref": "#/definitions/inbound_sms"}},
-        "links": {
-            "type": "object",
-            "properties": {"current": {"type": "string"}, "next": {"type": "string"}},
-            "additionalProperties": False,
-            "required": ["current"],
-        },
-    },
-    "required": ["received_text_messages", "links"],
-    "definitions": {"inbound_sms": get_inbound_sms_single_response},
-    "additionalProperties": False,
-}
