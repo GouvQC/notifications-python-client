@@ -14,7 +14,7 @@ Usage:
   make_api_call.py <base_url> <client-id> <secret> send-bulk
   make_api_call.py <base_url> <client-id> <secret> create
 
-  
+
 """
 
 import json
@@ -42,7 +42,9 @@ def create_sms_notification(notifications_client, **kwargs):
     personalisation = kwargs.get("--personalisation") or input("personalisation (JSON string) or press enter to skip::")
     personalisation = personalisation and json.loads(personalisation)
     reference = (
-        kwargs.get("--reference") if kwargs.get("--reference") is not None else input("reference string for notification or press enter to skip:: ")
+        kwargs.get("--reference")
+        if kwargs.get("--reference") is not None
+        else input("reference string for notification or press enter to skip:: ")
     )
     sms_sender_id = kwargs.get("--sms_sender_id") or input("sms sender id or press enter to skip:: ")
     return notifications_client.send_sms_notification(
@@ -60,11 +62,14 @@ def create_email_notification(notifications_client, **kwargs):
     template_id = kwargs.get("--template") or input("template id: ")
 
     # Optional fields with cleanup
-    personalisation_input = kwargs.get("--personalisation") or input("personalisation (as JSON) or press enter to skip: ")
+    personalisation_input = kwargs.get("--personalisation") or input(
+        "personalisation (as JSON) or press enter to skip: "
+    )
     personalisation = json.loads(personalisation_input) if personalisation_input else None
 
     reference_input = (
-        kwargs.get("--reference") if kwargs.get("--reference") is not None 
+        kwargs.get("--reference")
+        if kwargs.get("--reference") is not None
         else input("reference string for notification or press enter to skip: ")
     )
     reference = reference_input if reference_input else None
@@ -121,7 +126,8 @@ def get_all_notifications(notifications_client):
 
 def preview_template(notifications_client):
     template_id = input("Template id: ")
-    return notifications_client.get_template_preview(template_id)
+    personalisation = input("personalisation data: ")
+    return notifications_client.post_template_preview(template_id, personalisation)
 
 
 def get_template(notifications_client):
@@ -130,12 +136,13 @@ def get_template(notifications_client):
 
 
 def get_all_templates(notifications_client):
-    return notifications_client.get_all_templates()
+    template_type = input("template type: ")
+    return notifications_client.get_all_templates(template_type)
 
 
-def get_all_template_versions(notifications_client):
-    template_id = input("Template id: ")
-    return notifications_client.get_all_template_versions(template_id)
+# def get_all_template_versions(notifications_client):
+#     template_id = input("Template id: ")
+#     return notifications_client.get_all_template_versions(template_id)
 
 
 def get_template_version(notifications_client):
@@ -265,7 +272,7 @@ if __name__ == "__main__":
             pprint(get_all_templates(notifications_client=client))
         case "template_version":
             pprint(get_template_version(notifications_client=client))
-        case "all_template_versions":
-            pprint(get_all_template_versions(notifications_client=client))
+        # case "all_template_versions":
+        #     pprint(get_all_template_versions(notifications_client=client))
         case _:
             print("Commande non reconnue.")
