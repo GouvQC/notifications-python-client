@@ -11,30 +11,10 @@ Usage:
   make_api_call.py <base_url> <client-id> <secret> all_templates
   make_api_call.py <base_url> <client-id> <secret> template_version
   make_api_call.py <base_url> <client-id> <secret> all_template_versions
-  make_api_call.py <base_url> <client-id> <secret> send-bulk --type=<type> --template-id=<id> \
-    --name=<name> --reference=<ref> [--csv=<csv>] [--rows=<rows>]
-  make_api_call.py <base_url> <client-id> <secret> create --type=<type> --template=<id> \
-    --name=<name> --reference=<ref> [--to=<to>] [--personalisation=<json>] [--sms_sender_id=<sender_id>]
+  make_api_call.py <base_url> <client-id> <secret> send-bulk
+  make_api_call.py <base_url> <client-id> <secret> create
 
-Options:
-  --type=<type>               Type of notification: email or sms.
-  --to=<phone|email>          Target phone number or email for individual notification.
-  --personalisation=<json>   JSON object for dynamic fields in the notification.
-  --sms_sender_id=<id>        SMS sender ID if applicable.
-  --template-id=<id>          Template ID (for bulk).
-  --template=<id>             Template ID (for single send).
-  --name=<name>               Name for bulk send.
-  --reference=<ref>           Reference string.
-  --csv=<csv>                 CSV data inline.
-  --rows=<rows>               Rows data in JSON.
-
-Examples:
-  make_api_call.py https://api client-id secret health
-  make_api_call.py https://api client-id secret send-bulk --type=email --template-id=123 \
-      --name="Promo" --reference="ref001" --csv="email address,name\nuser@example.com,Alice"
-  make_api_call.py https://api client-id secret create --type=sms --template=456 \
-      --name="OTP" --reference="ref002" --to="+123456789" --personalisation='{"code":"123456"}'
-
+  
 """
 
 import json
@@ -47,8 +27,7 @@ from notifications_python_client.notifications import NotificationsAPIClient
 
 
 def create_notification(notifications_client, **kwargs):
-    notification_type = kwargs["--type"] or input("enter type email|sms: ")
-
+    notification_type = kwargs.get("--type") or input("Enter type: email | sms: ")
     if notification_type == "sms":
         return create_sms_notification(notifications_client, **kwargs)
     if notification_type == "email":
@@ -58,14 +37,14 @@ def create_notification(notifications_client, **kwargs):
 
 
 def create_sms_notification(notifications_client, **kwargs):
-    mobile_number = kwargs["--to"] or input("enter number (+441234123123): ")
-    template_id = kwargs["--template"] or input("template id: ")
-    personalisation = kwargs["--personalisation"] or input("personalisation (JSON string):")
+    mobile_number = kwargs.get("--to") or input("enter number (+441234123123): ")
+    template_id = kwargs.get("--template") or input("template id: ")
+    personalisation = kwargs.get("--personalisation") or input("personalisation (JSON string) or press enter to skip::")
     personalisation = personalisation and json.loads(personalisation)
     reference = (
-        kwargs["--reference"] if kwargs["--reference"] is not None else input("reference string for notification: ")
+        kwargs.get("--reference") if kwargs.get("--reference") is not None else input("reference string for notification or press enter to skip:: ")
     )
-    sms_sender_id = kwargs["--sms_sender_id"] or input("sms sender id: ")
+    sms_sender_id = kwargs.get("--sms_sender_id") or input("sms sender id or press enter to skip:: ")
     return notifications_client.send_sms_notification(
         mobile_number,
         template_id=template_id,
@@ -76,20 +55,41 @@ def create_sms_notification(notifications_client, **kwargs):
 
 
 def create_email_notification(notifications_client, **kwargs):
-    email_address = kwargs["--to"] or input("enter email: ")
-    template_id = kwargs["--template"] or input("template id: ")
-    personalisation = kwargs["--personalisation"] or input("personalisation (as JSON):") or None
-    personalisation = personalisation and json.loads(personalisation)
-    reference = (
-        kwargs["--reference"] if kwargs["--reference"] is not None else input("reference string for notification: ")
+    # Required fields
+    email_address = kwargs.get("--to") or input("enter email: ")
+    template_id = kwargs.get("--template") or input("template id: ")
+
+    # Optional fields with cleanup
+    personalisation_input = kwargs.get("--personalisation") or input("personalisation (as JSON) or press enter to skip: ")
+    personalisation = json.loads(personalisation_input) if personalisation_input else None
+
+    reference_input = (
+        kwargs.get("--reference") if kwargs.get("--reference") is not None 
+        else input("reference string for notification or press enter to skip: ")
     )
-    email_reply_to_id = input("email reply to id:")
+    reference = reference_input if reference_input else None
+
+    email_reply_to_id_input = input("email reply to id or press enter to skip: ")
+    email_reply_to_id = email_reply_to_id_input if email_reply_to_id_input else None
+
+    scheduled_for_input = input("scheduled for (YYYY-MM-DDThh:mm:ss.000Z format) or press enter to skip: ")
+    scheduled_for = scheduled_for_input if scheduled_for_input else None
+
+    importance_input = input("importance (high/normal/low) or press enter to skip: ")
+    importance = importance_input if importance_input and importance_input in ["high", "normal", "low"] else None
+
+    cc_address_input = input("cc email address or press enter to skip: ")
+    cc_address = cc_address_input if cc_address_input else None
+
     return notifications_client.send_email_notification(
         email_address,
         template_id=template_id,
         personalisation=personalisation,
         reference=reference,
         email_reply_to_id=email_reply_to_id,
+        scheduled_for=scheduled_for,
+        importance=importance,
+        cc_address=cc_address,
     )
 
 

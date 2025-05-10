@@ -29,7 +29,15 @@ class NotificationsAPIClient(BaseAPIClient):
         return self.post("/v2/notifications/sms", data=notification)
 
     def send_email_notification(
-        self, email_address, template_id, personalisation=None, reference=None, email_reply_to_id=None
+        self,
+        email_address,
+        template_id,
+        personalisation=None,
+        reference=None,
+        email_reply_to_id=None,
+        scheduled_for=None,
+        importance=None,
+        cc_address=None,
     ):
         """
         Envoie d'une notification de type email.
@@ -38,15 +46,30 @@ class NotificationsAPIClient(BaseAPIClient):
         :param personalisation: (optionnel) Données de personnalisation pour le gabarit.
         :param reference: (optionnel) Référence unique pour identifier la notification.
         :param email_reply_to_id: (optionnel) ID de l'adresse de réponse pour l'email.
+        :param scheduled_for: (optionnel) Date d'envoi programmé.
+        :param importance: (optionnel) Niveau d'importance ("high", "normal", "low").
+        :param cc_address: (optionnel) L'adresse courriel en copie.
         :return: Résultat de l'appel API POST.
         """
-        notification = {
-            "email_address": email_address,
-            "template_id": template_id,
-            **({"personalisation": personalisation} if personalisation else {}),
-            **({"reference": reference} if reference else {}),
-            **({"email_reply_to_id": email_reply_to_id} if email_reply_to_id else {}),
-        }
+
+        if importance and importance not in ["high", "normal", "low"]:
+            raise ValueError("importance doit être: high, normal ou low")
+
+        notification = {"email_address": email_address, "template_id": template_id}
+
+        if personalisation:
+            notification.update({"personalisation": personalisation})
+        if reference:
+            notification.update({"reference": reference})
+        if email_reply_to_id:
+            notification.update({"email_reply_to_id": email_reply_to_id})
+        if scheduled_for:
+            notification.update({"scheduled_for": scheduled_for})
+        if importance:
+            notification.update({"importance": importance})
+        if cc_address:
+            notification.update({"cc_address": cc_address})
+
         return self.post("/v2/notifications/email", data=notification)
 
     def send_bulk_notifications(

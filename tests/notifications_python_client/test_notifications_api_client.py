@@ -412,6 +412,131 @@ def test_check_health(notifications_client, rmock):
     assert response["status"] == "ok"
 
 
+def test_send_email_notification_with_invalid_importance(notifications_client):
+    with pytest.raises(ValueError) as exc:
+        notifications_client.send_email_notification(
+            email_address="test@example.com", template_id="1", importance="invalid"
+        )
+    assert str(exc.value) == "importance doit être: high, normal ou low"
+
+
+def test_send_email_notification_with_cc_address(notifications_client, rmock):
+    endpoint = f"{TEST_HOST}/v2/notifications/email"
+    rmock.request(
+        "POST",
+        endpoint,
+        json={"id": "12345", "content": {}, "template": {"id": "1", "version": 1}},
+        status_code=201,
+    )
+
+    notifications_client.send_email_notification(
+        email_address="test@example.com", template_id="1", cc_address="cc@example.com"
+    )
+
+    assert rmock.last_request.json() == {
+        "email_address": "test@example.com",
+        "template_id": "1",
+        "cc_address": "cc@example.com",
+    }
+
+
+def test_send_email_notification_with_importance_and_cc(notifications_client, rmock):
+    endpoint = f"{TEST_HOST}/v2/notifications/email"
+    rmock.request(
+        "POST",
+        endpoint,
+        json={"id": "12345", "content": {}, "template": {"id": "1", "version": 1}},
+        status_code=201,
+    )
+
+    notifications_client.send_email_notification(
+        email_address="test@example.com", template_id="1", importance="normal", cc_address="cc@example.com"
+    )
+
+    assert rmock.last_request.json() == {
+        "email_address": "test@example.com",
+        "template_id": "1",
+        "importance": "normal",
+        "cc_address": "cc@example.com",
+    }
+
+
+def test_send_email_notification_with_importance(notifications_client, rmock):
+    endpoint = f"{TEST_HOST}/v2/notifications/email"
+    rmock.request(
+        "POST",
+        endpoint,
+        json={"id": "12345", "content": {}, "template": {"id": "1", "version": 1}},
+        status_code=201,
+    )
+
+    notifications_client.send_email_notification(email_address="test@example.com", template_id="1", importance="high")
+
+    assert rmock.last_request.json() == {"email_address": "test@example.com", "template_id": "1", "importance": "high"}
+
+
+def test_send_email_notification_with_scheduled_for(notifications_client, rmock):
+    endpoint = f"{TEST_HOST}/v2/notifications/email"
+    rmock.request(
+        "POST",
+        endpoint,
+        json={"id": "12345", "content": {}, "template": {"id": "1", "version": 1}},
+        status_code=201,
+    )
+
+    scheduled_time = "2024-03-20T13:00:00.000Z"
+    notifications_client.send_email_notification(
+        email_address="test@example.com", template_id="1", scheduled_for=scheduled_time
+    )
+
+    assert rmock.last_request.json() == {
+        "email_address": "test@example.com",
+        "template_id": "1",
+        "scheduled_for": scheduled_time,
+    }
+
+
+def test_send_email_notification_with_null_scheduled_for(notifications_client, rmock):
+    endpoint = f"{TEST_HOST}/v2/notifications/email"
+    rmock.request(
+        "POST",
+        endpoint,
+        json={"id": "12345", "content": {}, "template": {"id": "1", "version": 1}},
+        status_code=201,
+    )
+
+    notifications_client.send_email_notification(email_address="test@example.com", template_id="1", scheduled_for=None)
+
+    assert rmock.last_request.json() == {"email_address": "test@example.com", "template_id": "1"}
+
+
+def test_send_email_notification_with_all_optional_params(notifications_client, rmock):
+    endpoint = f"{TEST_HOST}/v2/notifications/email"
+    rmock.request(
+        "POST",
+        endpoint,
+        json={"id": "12345", "content": {}, "template": {"id": "1", "version": 1}},
+        status_code=201,
+    )
+
+    scheduled_time = "2024-03-20T13:00:00.000Z"
+    notifications_client.send_email_notification(
+        email_address="test@example.com",
+        template_id="1",
+        importance="high",
+        cc_address="cc@example.com",
+        scheduled_for=scheduled_time,
+    )
+
+    assert rmock.last_request.json() == {
+        "email_address": "test@example.com",
+        "template_id": "1",
+        "importance": "high",
+        "cc_address": "cc@example.com",
+        "scheduled_for": scheduled_time,
+    }
+
+
 def _generate_response(next_link_uuid, notifications: list):
     return {
         "json": {
