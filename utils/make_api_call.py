@@ -39,14 +39,14 @@ def create_notification(notifications_client, **kwargs):
 def create_sms_notification(notifications_client, **kwargs):
     mobile_number = kwargs.get("--to") or input("enter number (+441234123123): ")
     template_id = kwargs.get("--template") or input("template id: ")
-    personalisation = kwargs.get("--personalisation") or input("personalisation (JSON string) or press enter to skip::")
+    personalisation = kwargs.get("--personalisation") or input("personalisation (JSON string) or press enter to skip: ")
     personalisation = personalisation and json.loads(personalisation)
     reference = (
         kwargs.get("--reference")
         if kwargs.get("--reference") is not None
         else input("reference string for notification or press enter to skip:: ")
     )
-    sms_sender_id = kwargs.get("--sms_sender_id") or input("sms sender id or press enter to skip:: ")
+    sms_sender_id = kwargs.get("--sms_sender_id") or input("sms sender id or press enter to skip: ")
     return notifications_client.send_sms_notification(
         mobile_number,
         template_id=template_id,
@@ -115,10 +115,10 @@ def get_all_notifications_generator(notifications_client):
 
 
 def get_all_notifications(notifications_client):
-    status = input("Notification status: ")
-    template_type = input("Notification template type: ")
-    reference = input("Notification reference: ")
-    older_than = input("Older than id: ")
+    status = input("Notification status or press enter to skip: ")
+    template_type = input("Notification template type or press enter to skip: ")
+    reference = input("Notification reference or press enter to skip: ")
+    older_than = input("Older than id or press enter to skip: ")
     return notifications_client.get_all_notifications(
         status=status, template_type=template_type, reference=reference, older_than=older_than
     )
@@ -136,13 +136,8 @@ def get_template(notifications_client):
 
 
 def get_all_templates(notifications_client):
-    template_type = input("template type: ")
+    template_type = input("template type or press enter to skip: ")
     return notifications_client.get_all_templates(template_type)
-
-
-# def get_all_template_versions(notifications_client):
-#     template_id = input("Template id: ")
-#     return notifications_client.get_all_template_versions(template_id)
 
 
 def get_template_version(notifications_client):
@@ -242,7 +237,6 @@ if __name__ == "__main__":
         None,
     )
 
-    # Switch/Case pour gérer l'exécution en fonction de la commande
     match called_command:
         case "health":
             pprint(check_health(notifications_client=client))
@@ -272,7 +266,5 @@ if __name__ == "__main__":
             pprint(get_all_templates(notifications_client=client))
         case "template_version":
             pprint(get_template_version(notifications_client=client))
-        # case "all_template_versions":
-        #     pprint(get_all_template_versions(notifications_client=client))
         case _:
             print("Commande non reconnue.")
