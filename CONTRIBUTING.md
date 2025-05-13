@@ -51,3 +51,89 @@ Si vous découvrez un problème de sécurité potentiel dans un projet appartena
 ## Licences
 
 Voir le fichier [LICENCE](LICENSE) qui identifie les licences potentiellement requises pour soutenir un de nos projets. Nous vous demanderons de confirmer la licence en lien avec votre contribution.
+
+## Configuration
+
+### Conteneur Docker
+
+Il s'agit d'une base de code Python, écrite pour prendre en charge uniquement Python 3.
+
+Cette application utilise des dépendances difficiles à installer localement. Afin de faciliter le développement local, nous exécutons les commandes de l'application via un conteneur Docker. Exécutez la commande suivante pour configurer cela :
+
+```shell
+make bootstrap-with-docker
+```
+
+Comme le conteneur met en cache des éléments tels que les paquets, vous devrez relancer cette commande si vous changez les versions des paquets.
+
+### `environment.sh`
+
+Dans le répertoire racine du dépôt, exécutez :
+
+```
+notify-pass credentials/client-integration-tests > environment.sh
+```
+
+À moins que vous ne fassiez partie de l’équipe GOV.UK Notify, vous ne pourrez pas exécuter cette commande ni les tests d'intégration. Cependant, le fichier doit quand même exister — exécutez plutôt `touch environment.sh`.
+
+## Tests
+
+Il existe des tests unitaires et d'intégration que vous pouvez exécuter pour tester les fonctionnalités du client.
+
+### Tests unitaires
+
+Pour exécuter les tests unitaires :
+
+```
+make test-with-docker
+```
+
+### tox
+
+Nous utilisons tox pour garantir que le code fonctionne avec toutes les versions de Python. Vous pouvez l'exécuter via Docker en lançant :
+
+```sh
+make tox-with-docker
+```
+
+Comme tox met en cache les paquets installés, vous devrez peut-être exécuter `rm -rf .tox` si vous modifiez les versions des paquets.
+
+### Tests d'intégration
+
+Pour exécuter les tests d'intégration :
+
+```
+make integration-test-with-docker
+```
+
+## Exécuter le client localement
+
+Si vous souhaitez exécuter tox localement, vous devrez installer plusieurs versions de Python. Vous devriez utiliser [`pyenv`](https://github.com/pyenv/pyenv) pour cela.
+
+```sh
+while read line; do pyenv install "$line" < /dev/null; done < tox-python-versions
+```
+
+Vous avez peut-être déjà un fichier `.python-version`. Pour exécuter tox, vous devez activer toutes les versions de Python présentes dans `tox-python-versions`.
+
+```sh
+cp tox-python-versions .python-version
+```
+
+Vous devrez ensuite installer tox.
+
+```sh
+pip install tox
+```
+
+Vous pouvez alors exécuter `tox` pour lancer les tests avec chaque version de Python.
+
+## Outil en ligne de commande
+
+Utilisez cet outil pour tester le client sans avoir à créer une application.
+
+```
+python utils/make_api_call.py <base_api_url> <api_key> [fetch|create]
+```
+
+Cela utilisera l’API référencée dans l’argument base_api_url pour envoyer un message texte.

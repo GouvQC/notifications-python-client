@@ -36,14 +36,14 @@ class IntegrationTestCommand(TestCommand):
 setup(
     name="notifications-python-client",
     version=version,
-    url="https://github.com/alphagov/notifications-python-client",
-    license="MIT",
-    author="Government Digital Service",
-    description="Python API client for GOV.UK Notify.",
+    url="https://github.com/GouvQC/notifications-python-client",
+    license="LiLiQ-R+",
+    author="Ministère de la Cybersécurité et du numérique (MCN)",
+    description="Python API client for La Plateforme gouvernementale de notification.",
     long_description=__doc__,
     classifiers=[
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Licence Libre du Québec - Réciprocité forte (LiLiQ-R+)",
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.8",
@@ -52,7 +52,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
     ],
-    keywords="gds govuk notify",
+    keywords="pgn gouvqc notification",
     packages=find_packages(include=["notifications_python_client"]),
     include_package_data=True,
     # only support actively patched versions of python (https://devguide.python.org/versions/)
