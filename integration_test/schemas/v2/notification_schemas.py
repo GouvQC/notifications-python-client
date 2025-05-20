@@ -27,7 +27,7 @@ get_notification_response = {
         "line_6": {"type": ["string", "null"]},
         "postcode": {"type": ["string", "null"]},
         "postage": {"enum": ["first", "second", None]},
-        "type": {"enum": ["sms", "letter", "email"]},
+        "type": {"enum": ["sms", "email"]},
         "status": {"type": "string"},
         "template": template,
         "body": {"type": "string"},
@@ -160,50 +160,147 @@ post_email_response = {
     "required": ["id", "content", "uri", "template"],
 }
 
-post_letter_request = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST letter notification schema",
+post_bulk_notifications_response = {
+    "description": "Réponse de la route permettant de créer ou envoyer une notification en masse",
     "type": "object",
-    "title": "POST v2/notifications/letter",
-    "properties": {"reference": {"type": "string"}, "template_id": uuid, "personalisation": personalisation},
-    "required": ["letter_address", "template_id"],
-}
-
-letter_content = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Letter content for POST letter notification",
-    "type": "object",
-    "title": "notification letter content",
-    "properties": {"body": {"type": ["string", "null"]}, "subject": {"type": "string"}},
-    "required": ["body", "subject"],
-}
-
-post_letter_response = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST letter notification response schema",
-    "type": "object",
-    "title": "response v2/notifications/letter",
     "properties": {
-        "id": uuid,
-        "reference": {"type": ["string", "null"]},
-        "content": letter_content,
-        "uri": {"type": "string"},
-        "template": template,
+        "data": {
+            "type": "object",
+            "description": "Données du job créé ou envoyé",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant unique du job",
+                },
+                "api_key": {
+                    "type": "object",
+                    "description": "Détails de la clé API utilisée pour ce job",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Identifiant de la clé API",
+                        },
+                        "key_type": {
+                            "type": "string",
+                            "enum": ["team", "live", "test"],
+                            "description": "Type de la clé API",
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Nom de la clé API",
+                        },
+                    },
+                    "required": ["id", "key_type", "name"],
+                },
+                "archived": {
+                    "type": "boolean",
+                    "description": "Indique si le job est archivé",
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Horodatage de la création du job",
+                },
+                "updated_at": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Horodatage de la dernière mise à jour du job",
+                },
+                "created_by": {
+                    "type": "object",
+                    "description": "Informations sur l'utilisateur ayant créé le job",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Identifiant de l'utilisateur",
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Nom de l'utilisateur",
+                        },
+                    },
+                    "required": ["id", "name"],
+                },
+                "job_status": {
+                    "type": "string",
+                    "enum": ["pending", "in-progress", "completed", "failed"],
+                    "description": "Statut du job",
+                },
+                "notification_count": {
+                    "type": "integer",
+                    "description": "Nombre de notifications générées par le job",
+                },
+                "original_file_name": {
+                    "type": "string",
+                    "description": "Nom du fichier utilisé pour le job",
+                },
+                "processing_started": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Horodatage du début du traitement",
+                },
+                "processing_finished": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Horodatage de la fin du traitement",
+                },
+                "scheduled_for": {
+                    "type": ["string", "null"],
+                    "format": "date-time",
+                    "description": "Date et heure de planification du job",
+                },
+                "sender_id": {
+                    "type": ["string", "null"],
+                    "format": "uuid",
+                    "description": "Identifiant de l'expéditeur",
+                },
+                "service": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant du service associé au job",
+                },
+                "service_name": {
+                    "type": "object",
+                    "description": "Nom du service associé au job",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Nom du service",
+                        },
+                    },
+                    "required": ["name"],
+                },
+                "template": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant du gabarit utilisé pour le job",
+                },
+                "template_version": {
+                    "type": "integer",
+                    "description": "Version du gabarit utilisé",
+                },
+            },
+            "required": [
+                "id",
+                "api_key",
+                "archived",
+                "created_at",
+                "created_by",
+                "job_status",
+                "notification_count",
+                "original_file_name",
+                "service",
+                "service_name",
+                "template",
+                "template_version",
+            ],
+        }
     },
-    "required": ["id", "content", "uri", "template"],
-}
-
-post_precompiled_letter_response = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST letter notification response schema",
-    "type": "object",
-    "title": "response v2/notifications/letter",
-    "properties": {
-        "id": uuid,
-        "reference": {"type": ["string", "null"]},
-        "postage": {"enum": ["first", "second", None]},
-    },
-    "required": ["id", "reference"],
+    "required": ["data"],
+    "additionalProperties": False,
 }
 
 

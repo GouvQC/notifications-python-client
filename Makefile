@@ -19,10 +19,6 @@ bootstrap: ## Install build dependencies
 .PHONY: build
 build: bootstrap ## Build project (dummy task for CI)
 
-.PHONY: bump-utils
-bump-utils:  # Bump notifications-utils package to latest version
-	python -c "from notifications_utils.version_tools import upgrade_version; upgrade_version()"
-
 .PHONY: test
 test: ## Run tests
 	ruff check .
@@ -31,7 +27,7 @@ test: ## Run tests
 
 .PHONY: integration-test
 integration-test: ## Run integration tests
-	python -m integration_test.integration_tests
+	source environment.sh && python -m integration_test.integration_tests
 
 .PHONY: build-wheel
 build-wheel: ## build distributable wheel

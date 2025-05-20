@@ -1,10 +1,10 @@
-# La Plateforme gouvernementale de notification Python client
+# Client Python pour la Plateforme Gouvernementale de Notification
 
-Use this client to send emails, text messages and letters using la [Plateforme gouvernementale de notification](https://admin.notification.gouv.qc.ca/) API.
+Utilisez ce client pour envoyer des courriels et des messages texte en utilisant l'API de la [Plateforme Gouvernementale de Notification](https://admin.notification.gouv.qc.ca/).
 
-Useful links:
+Liens utiles :
 
 - [Documentation](https://documentation.notification.gouv.qc.ca/fr/)
-- [PyPi package](https://pypi.org/project/notifications-python-client-pgn/)
-- [Changelog](https://github.com/GouvQC/notifications-python-client/blob/main/CHANGELOG.md)
-- [Contributing to this client](https://github.com/GouvQC/notifications-python-client/blob/main/CONTRIBUTING.md)
+- [Package PyPi](https://pypi.org/project/notifications-python-client-pgn/)
+- [Journal des modifications](https://github.com/GouvQC/notifications-python-client/blob/main/CHANGELOG.md)
+- [Contribuer à ce client](https://github.com/GouvQC/notifications-python-client/blob/main/CONTRIBUTING.md)
