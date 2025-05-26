@@ -43,12 +43,9 @@ COPY . .
 # The first version in the file will be the one used when running "python"
 RUN pyenv global $(tr '\n' ' ' < tox-python-versions)
 
-RUN for v in $(cat tox-python-versions); do \
-  pyenv install -s $v && \
-  /root/.pyenv/versions/$v/bin/pip install --upgrade setuptools==78.1.1; \
-done
+COPY install_python_versions.sh .
 
-
+RUN bash install_python_versions.sh
 
 RUN make bootstrap
 
