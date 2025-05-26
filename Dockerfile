@@ -44,8 +44,10 @@ COPY . .
 RUN pyenv global $(tr '\n' ' ' < tox-python-versions)
 
 RUN for v in $(cat tox-python-versions); do \
-  pyenv shell $v && pip install --upgrade setuptools==78.1.1; \
+  pyenv install -s $v && \
+  /root/.pyenv/versions/$v/bin/pip install --upgrade setuptools==78.1.1; \
 done
+
 
 
 RUN make bootstrap
