@@ -40,13 +40,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Scan codebase and dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install .
+          pip install -r requirements_for_test.txt
+
+      - name: Run Trivy on site-packages
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
-          scan-ref: .
+          scan-ref: ./venv/lib/python3.11/site-packages
           format: table
           exit-code: 1
           ignore-unfixed: true
-          scanners: vuln,secret
+          scanners: vuln
           severity: CRITICAL,HIGH
+

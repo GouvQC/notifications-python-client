@@ -4,6 +4,11 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
+    apt-get install -y --only-upgrade libc-bin && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       awscli \
       gcc \
@@ -37,6 +42,11 @@ COPY . .
 # Make pyenv activate all installed Python versions for tox (available as pythonX.Y)
 # The first version in the file will be the one used when running "python"
 RUN pyenv global $(tr '\n' ' ' < tox-python-versions)
+
+RUN for v in $(cat tox-python-versions); do \
+  pyenv shell $v && pip install --upgrade setuptools==78.1.1; \
+done
+
 
 RUN make bootstrap
 
