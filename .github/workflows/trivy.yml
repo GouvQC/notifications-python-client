@@ -48,5 +48,5 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
-          vuln-type: library, secret
+          scanners: vuln,secret
           severity: CRITICAL,HIGH
