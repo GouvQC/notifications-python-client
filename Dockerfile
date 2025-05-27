@@ -45,7 +45,7 @@ RUN pyenv global $(tr '\n' ' ' < tox-python-versions)
 
 COPY install_python_versions.sh .
 
-RUN ./install_python_versions.sh
+RUN chmod +x install_python_versions.sh && ./install_python_versions.sh
 
 RUN make bootstrap
 
