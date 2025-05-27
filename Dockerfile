@@ -43,10 +43,6 @@ COPY . .
 # The first version in the file will be the one used when running "python"
 RUN pyenv global $(tr '\n' ' ' < tox-python-versions)
 
-COPY install_python_versions.sh .
-
-RUN chmod +x install_python_versions.sh && ./install_python_versions.sh
-
 RUN make bootstrap
 
 RUN pip install tox

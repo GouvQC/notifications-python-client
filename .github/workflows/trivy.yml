@@ -50,7 +50,7 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
-          pip install .    # installe ta lib locale
+          pip install .
           pip install -r requirements_for_test.txt
 
       - name: Install CycloneDX generator
