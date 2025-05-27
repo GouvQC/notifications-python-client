@@ -43,6 +43,11 @@ COPY . .
 # The first version in the file will be the one used when running "python"
 RUN pyenv global $(tr '\n' ' ' < tox-python-versions)
 
+# Mise à jour de setuptools dans chaque version Python
+RUN for v in $(cat tox-python-versions); do \
+    /root/.pyenv/versions/$v/bin/pip install --upgrade setuptools==78.1.1; \
+  done
+
 RUN make bootstrap
 
 RUN pip install tox
