@@ -197,47 +197,66 @@ def test_get_template_by_id(notifications_client, mock_response, notification_ty
 
     assert template_id == response["id"]
 
+@pytest.mark.parametrize(
+    ("notification_type", "subject"),
+    [
+        (EMAIL_TYPE, "Sujet"), (SMS_TYPE, None)
+    ])
+def test_get_template_by_id_and_version(notifications_client, mock_response, notification_type, subject):
+    template_id = "7655dfa5-2771-43c1-82eb-6d5beb4535f4"
+    mock_response.json.return_value = JSONBuilder.from_schema(get_template_by_id_response).merge_values({"id": template_id, "version": 1, "subject": subject}).get_json_object()
 
-def get_template_by_id_and_version(python_client, template_id, version, notification_type):
-    response = python_client.get_template_version(template_id, version)
+    response = notifications_client.get_template_version(template_id, 1)
 
-    if notification_type == EMAIL_TYPE:
-        validate(response, get_template_by_id_response)
-    elif notification_type == SMS_TYPE:
-        validate(response, get_template_by_id_response)
-        assert response["subject"] is None
-    else:
-        raise KeyError("template type should be email|sms")
+    validate(response, get_template_by_id_response)
+    assert response["subject"] == subject
 
     assert template_id == response["id"]
-    assert version == response["version"]
+    assert 1 == response["version"]
 
 
-def post_template_preview(python_client, template_id, notification_type):
+@pytest.mark.parametrize(
+    ("notification_type", "subject"),
+    [
+        (EMAIL_TYPE, "Sujet"), (SMS_TYPE, None)
+    ])
+def test_post_template_preview(notifications_client, mock_response,  notification_type, subject):
+    template_id = "6655dfa5-2771-43c1-82eb-6d5beb4535f9"
     unique_name = str(uuid.uuid4())
     personalisation = {"name": unique_name}
 
-    response = python_client.post_template_preview(template_id, personalisation)
+    mock_response.json.return_value = JSONBuilder.from_schema(post_template_preview_response).merge_values({"id": template_id, "version": 1, "subject": subject, "body": unique_name }).get_json_object()
 
-    if notification_type == EMAIL_TYPE:
-        validate(response, post_template_preview_response)
-    elif notification_type == SMS_TYPE:
-        validate(response, post_template_preview_response)
-        assert response["subject"] is None
-    else:
-        raise KeyError("template type should be email|sms")
+    response = notifications_client.post_template_preview(template_id, personalisation)
 
+    validate(response, post_template_preview_response)
+    assert response["subject"] == subject
     assert template_id == response["id"]
     assert unique_name in response["body"]
 
 
-def get_all_templates(python_client):
-    response = python_client.get_all_templates()
+def test_get_all_templates(notifications_client, mock_response):
+
+    single_template_response = JSONBuilder.from_schema(get_template_by_id_response).get_json_object()
+    mock_response.json.return_value = JSONBuilder.from_schema(get_all_template_response).get_json_object()
+    mock_response.json.return_value["templates"] = [single_template_response]
+
+    response = notifications_client.get_all_templates()
+
     validate(response, get_all_template_response)
 
+@pytest.mark.parametrize(
+    "notification_type",
+    [
+        EMAIL_TYPE, SMS_TYPE
+    ])
+def test_get_all_templates_for_type(notifications_client, mock_response, notification_type):
 
-def get_all_templates_for_type(python_client, template_type):
-    response = python_client.get_all_templates(template_type)
+    single_template_response = JSONBuilder.from_schema(get_template_by_id_response).get_json_object()
+    mock_response.json.return_value = JSONBuilder.from_schema(get_all_template_response).get_json_object()
+    mock_response.json.return_value["templates"] = [single_template_response]
+
+    response = notifications_client.get_all_templates(notification_type)
     validate(response, get_all_template_response)
 
 
@@ -317,13 +336,13 @@ def no_test_integration():
     test_send_bulk_notifications_with_rows(client, SMS_TYPE)
     test_send_bulk_notifications_with_rows(client, EMAIL_TYPE)
 
-    get_template_by_id(client, sms_template_id, SMS_TYPE)
-    get_template_by_id(client, email_template_id, EMAIL_TYPE)
-    get_template_by_id_and_version(client, sms_template_id, version_number, SMS_TYPE)
-    get_template_by_id_and_version(client, email_template_id, version_number, EMAIL_TYPE)
-    post_template_preview(client, sms_template_id, SMS_TYPE)
-    post_template_preview(client, email_template_id, EMAIL_TYPE)
-    get_all_templates(client)
+    test_get_template_by_id(client, mock_response(), SMS_TYPE)
+    test_get_template_by_id(client, mock_response(), EMAIL_TYPE)
+    test_get_template_by_id_and_version(client, mock_response(), sms_template_id, SMS_TYPE, None)
+    test_get_template_by_id_and_version(client, mock_response(), email_template_id, EMAIL_TYPE, "sujet")
+    test_post_template_preview(client, mock_response(), sms_template_id, SMS_TYPE, None)
+    test_post_template_preview(client, mock_response(), email_template_id, EMAIL_TYPE, "sujet")
+    test_get_all_templates(client, mock_response())
     get_all_templates_for_type(client, EMAIL_TYPE)
     get_all_templates_for_type(client, SMS_TYPE)
 
