@@ -139,7 +139,7 @@ def test_send_bulk_notifications_with_rows(notifications_client, mock_response, 
     # Validation de la réponse
     validate(response, post_bulk_notifications_response)
     check_call(mock_session_instance, "POST", "base_url/v2/notifications/bulk")
-    check_call_body(mock_session_instance, {"template_id": template_id, "name": "Test Bulk Notification Integration", "rows": rows, "reference": "bulk_ref_integration_test"})
+    check_call_body(mock_session_instance, {"template_id": template_id, "name": name, "rows": rows, "reference": reference})
     assert response["data"]["id"] is not None
     assert response["data"]["notification_count"] == 2
     assert response["data"]["original_file_name"] == name
@@ -151,7 +151,7 @@ def test_send_bulk_notifications_with_rows(notifications_client, mock_response, 
         ("email address", "user1@fun.com"),
         ("phone_number", "+4182232345")
     ])
-def test_send_bulk_notifications_with_csv(notifications_client, mock_response, header, destination):
+def test_send_bulk_notifications_with_csv(notifications_client, mock_response, mock_session_instance, header, destination):
     """
     Teste l'envoi de notifications en masse avec un fichier CSV brut.
     """
@@ -179,6 +179,9 @@ def test_send_bulk_notifications_with_csv(notifications_client, mock_response, h
     )
 
     # Validation de la réponse
+    check_call(mock_session_instance, "POST", "base_url/v2/notifications/bulk")
+    check_call_body(mock_session_instance, {"template_id": template_id, "name": name, "csv": csv_data, "reference": reference})
+
     validate(response, post_bulk_notifications_response)
     assert response["data"]["id"] is not None
     assert response["data"]["notification_count"] == 2
