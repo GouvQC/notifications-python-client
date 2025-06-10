@@ -32,4 +32,4 @@ jobs:
       - name: Run function tests (mocked)
         run: |
           source venv/bin/activate
-          pytest install integration_test/integration_tests_mocked.py
+          pytest integration_test/integration_tests_mocked.py
