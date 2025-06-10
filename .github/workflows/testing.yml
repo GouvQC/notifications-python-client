@@ -1,4 +1,4 @@
-name: Trivy Scan
+name: Tests fonctionels
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker-scan:
+  run-tests:
     name: Tests fonctionnels
     runs-on: ubuntu-latest
 
