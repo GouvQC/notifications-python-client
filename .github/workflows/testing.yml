@@ -33,3 +33,8 @@ jobs:
         run: |
           source venv/bin/activate
           pytest integration_test/integration_tests_mocked.py
+
+      - name: Run unit tests
+        run: |
+          source venv/bin/activate
+          pytest tests/
