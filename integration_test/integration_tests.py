@@ -1,13 +1,10 @@
 import os
 import time
 import uuid
-from unittest.mock import Mock, patch, MagicMock
 
-import pytest
 from jsonschema import Draft4Validator
 
 from integration_test.enums import EMAIL_TYPE, SMS_TYPE
-from integration_test.generate_json import JSONBuilder
 from integration_test.schemas.v2.notification_schemas import (
     get_notification_response,
     get_notifications_response,
@@ -22,74 +19,51 @@ from integration_test.schemas.v2.template_schemas import (
 from integration_test.schemas.v2.templates_schemas import get_all_template_response
 from notifications_python_client.notifications import NotificationsAPIClient
 
-@pytest.fixture
-def mock_response():
-    mock_response = MagicMock(name="response")
-    return mock_response
-
-@pytest.fixture
-def notifications_client(mock_response):
-    with patch(target = "requests.Session") as mock_session:
-
-        mock_session_instance = MagicMock(name="actual_session")
-        mock_session.return_value = mock_session_instance
-        mock_session_instance.request.return_value = mock_response
-        val =  NotificationsAPIClient(
-            base_url="base_url", api_key="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", client_id="client_id"
-        )
-
-        return val
-
 
 def validate(json_to_validate, schema):
     validator = Draft4Validator(schema)
     validator.validate(json_to_validate, schema)
 
-def test_send_sms_notification_test_response(notifications_client, mock_response):
-    mobile_number = "+4382992998"
-    template_id = "9090af3a-75b5-46d4-a7ce-0c1a174091fa"
+
+def send_sms_notification_test_response(python_client, sender_id=None):
+    mobile_number = os.environ["FUNCTIONAL_TEST_NUMBER"]
+    template_id = os.environ["SMS_TEMPLATE_ID"]
     unique_name = str(uuid.uuid4())
     personalisation = {"name": unique_name}
-    mock_response.json.return_value = JSONBuilder.from_schema(post_sms_response).merge_values({"id": "7070bf3a-75b5-46d4-a7ce-0c1a174091fa", "content": { "body": unique_name}}).get_json_object()
-
-    response = notifications_client.send_sms_notification(
+    sms_sender_id = sender_id
+    response = python_client.send_sms_notification(
         phone_number=mobile_number,
         template_id=template_id,
         personalisation=personalisation,
-        sms_sender_id=None,
+        sms_sender_id=sms_sender_id,
     )
     validate(response, post_sms_response)
     assert unique_name in response["content"]["body"]  # check placeholders are replaced
-    assert response["id"] == "7070bf3a-75b5-46d4-a7ce-0c1a174091fa"
+    return response["id"]
 
-@pytest.mark.parametrize(
-    ("header", "destination"),
-    [
-        ("email address", "user1@fun.com"),
-        ("phone_number", "+4182232345")
-    ])
-def test_send_bulk_notifications_with_rows(notifications_client, mock_response, header, destination):
+
+def send_bulk_notifications_with_rows(notifications_client, notification_type):
     """
     Teste l'envoi de notifications en masse via l'API.
     """
 
-    template_id = "9090af3a-75b5-46d4-a7ce-0c1a174091fa"
-    mock_response.json.return_value = (
-        JSONBuilder.from_schema(post_bulk_notifications_response)
-        .merge_values(
-            {
-                "data": {
-                    "notification_count": 2,
-                    "original_file_name": "Test Bulk Notification Integration",
-                    "template": template_id}}).get_json_object()
-    )
+    functional_test_email = os.environ["FUNCTIONAL_TEST_EMAIL"]
+    functional_phone_number = os.environ["FUNCTIONAL_TEST_NUMBER"]
 
-
-    rows = [
-        [header, "name"],
-        [destination, "Alice"],
-        [destination, "Wok"]
-    ]
+    if notification_type == EMAIL_TYPE:
+        template_id = os.environ["EMAIL_TEMPLATE_ID"]
+        rows = [
+            ["email address", "name"],
+            [functional_test_email, "Alice"],
+            [functional_test_email, "Wok"],
+        ]
+    elif notification_type == SMS_TYPE:
+        template_id = os.environ["SMS_TEMPLATE_ID"]
+        rows = [
+            ["phone number", "name"],
+            [functional_phone_number, "Alice"],
+            [functional_phone_number, "Wok"],
+        ]
 
     name = "Test Bulk Notification Integration"
 
@@ -110,28 +84,21 @@ def test_send_bulk_notifications_with_rows(notifications_client, mock_response, 
     assert response["data"]["original_file_name"] == name
     assert response["data"]["template"] == template_id
 
-@pytest.mark.parametrize(
-    ("header", "destination"),
-    [
-        ("email address", "user1@fun.com"),
-        ("phone_number", "+4182232345")
-    ])
-def test_send_bulk_notifications_with_csv(notifications_client, mock_response, header, destination):
+
+def send_bulk_notifications_with_csv(notifications_client, notification_type):
     """
     Teste l'envoi de notifications en masse avec un fichier CSV brut.
     """
-    template_id = "9090af3a-75b5-46d4-a7ce-0c1a174091fa"
-    mock_response.json.return_value = (
-        JSONBuilder.from_schema(post_bulk_notifications_response)
-        .merge_values(
-            {
-                "data": {
-                    "notification_count": 2,
-                    "original_file_name": "Bulk send email with personalisation",
-                    "template": template_id}}).get_json_object()
-    )
+    functional_test_email = os.environ["FUNCTIONAL_TEST_EMAIL"]
+    functional_phone_number = os.environ["FUNCTIONAL_TEST_NUMBER"]
 
-    csv_data = f"{header},name\n{destination},Alice\n{destination},Wok"
+    if notification_type == EMAIL_TYPE:
+        template_id = os.environ["EMAIL_TEMPLATE_ID"]
+        csv_data = f"email address,name\n{functional_test_email},Alice\n{functional_test_email},Wok"
+    elif notification_type == SMS_TYPE:
+        template_id = os.environ["SMS_TEMPLATE_ID"]
+        csv_data = f"phone number,name\n{functional_phone_number},Alice\n{functional_phone_number},Wok"
+
     name = "Bulk send email with personalisation"
     reference = "bulk_ref_integration_test_csv"
 
@@ -151,135 +118,147 @@ def test_send_bulk_notifications_with_csv(notifications_client, mock_response, h
     assert response["data"]["template"] == template_id
 
 
-def test_send_email_notification_test_response(notifications_client, mock_response):
-    email_address = "chic@freakout.com"
-    template_id = str(uuid.uuid4())
+def send_email_notification_test_response(python_client, reply_to=None):
+    email_address = os.environ["FUNCTIONAL_TEST_EMAIL"]
+    template_id = os.environ["EMAIL_TEMPLATE_ID"]
+    email_reply_to_id = reply_to
     unique_name = str(uuid.uuid4())
     personalisation = {"name": unique_name}
-
-    mock_response.json.return_value = JSONBuilder.from_schema(post_email_response).merge_values({"id": "6060bf3a-75b5-46d4-a7ce-0c1a174091fa", "content": { "body": unique_name}}).get_json_object()
-
-    response = notifications_client.send_email_notification(
+    response = python_client.send_email_notification(
         email_address=email_address,
         template_id=template_id,
         personalisation=personalisation,
-        email_reply_to_id=None,
+        email_reply_to_id=email_reply_to_id,
     )
     validate(response, post_email_response)
     assert unique_name in response["content"]["body"]  # check placeholders are replaced
     return response["id"]
 
-@pytest.mark.parametrize(
-    "notification_type",
-    [
-        EMAIL_TYPE, SMS_TYPE
-    ])
-def test_get_notification_by_id(notifications_client, mock_response, notification_type):
 
-    mock_response.json.return_value = JSONBuilder.from_schema(get_notification_response).get_json_object()
-
-    response = notifications_client.get_notification_by_id(id)
-
-    validate(response, get_notification_response)
+def get_notification_by_id(python_client, id, notification_type):
+    response = python_client.get_notification_by_id(id)
+    if notification_type == EMAIL_TYPE:
+        validate(response, get_notification_response)
+    elif notification_type == SMS_TYPE:
+        validate(response, get_notification_response)
+    else:
+        raise KeyError("notification type should be email|sms")
 
 
-def test_get_all_notifications(notifications_client, mock_response):
-    single_notification_response = JSONBuilder.from_schema(get_notification_response).get_json_object()
-    mock_response.json.return_value = JSONBuilder.from_schema(get_notifications_response).get_json_object()
-    mock_response.json.return_value["notifications"] = [single_notification_response]
-
-    response = notifications_client.get_all_notifications()
-
+def get_all_notifications(client):
+    response = client.get_all_notifications()
     validate(response, get_notifications_response)
 
 
-@pytest.mark.parametrize(
-    "notification_type",
-    [
-        EMAIL_TYPE, SMS_TYPE
-    ])
-def test_get_template_by_id(notifications_client, mock_response, notification_type):
-    template_id = "8655dfa5-2771-43c1-82eb-6d5beb4535f2"
+def get_template_by_id(python_client, template_id, notification_type):
+    response = python_client.get_template(template_id)
 
-    mock_response.json.return_value = JSONBuilder.from_schema(get_template_by_id_response).merge_values({"id": template_id}).get_json_object()
-    response = notifications_client.get_template(template_id)
-
-    validate(response, get_template_by_id_response)
+    if notification_type == EMAIL_TYPE:
+        validate(response, get_template_by_id_response)
+    elif notification_type == SMS_TYPE:
+        validate(response, get_template_by_id_response)
+        assert response["subject"] is None
+    else:
+        raise KeyError("template type should be email|sms")
 
     assert template_id == response["id"]
 
-@pytest.mark.parametrize(
-    ("notification_type", "subject"),
-    [
-        (EMAIL_TYPE, "Sujet"), (SMS_TYPE, None)
-    ])
-def test_get_template_by_id_and_version(notifications_client, mock_response, notification_type, subject):
-    template_id = "7655dfa5-2771-43c1-82eb-6d5beb4535f4"
-    mock_response.json.return_value = JSONBuilder.from_schema(get_template_by_id_response).merge_values({"id": template_id, "version": 1, "subject": subject}).get_json_object()
 
-    response = notifications_client.get_template_version(template_id, 1)
+def get_template_by_id_and_version(python_client, template_id, version, notification_type):
+    response = python_client.get_template_version(template_id, version)
 
-    validate(response, get_template_by_id_response)
-    assert response["subject"] == subject
+    if notification_type == EMAIL_TYPE:
+        validate(response, get_template_by_id_response)
+    elif notification_type == SMS_TYPE:
+        validate(response, get_template_by_id_response)
+        assert response["subject"] is None
+    else:
+        raise KeyError("template type should be email|sms")
 
     assert template_id == response["id"]
-    assert 1 == response["version"]
+    assert version == response["version"]
 
 
-@pytest.mark.parametrize(
-    ("notification_type", "subject"),
-    [
-        (EMAIL_TYPE, "Sujet"), (SMS_TYPE, None)
-    ])
-def test_post_template_preview(notifications_client, mock_response,  notification_type, subject):
-    template_id = "6655dfa5-2771-43c1-82eb-6d5beb4535f9"
+def post_template_preview(python_client, template_id, notification_type):
     unique_name = str(uuid.uuid4())
     personalisation = {"name": unique_name}
 
-    mock_response.json.return_value = JSONBuilder.from_schema(post_template_preview_response).merge_values({"id": template_id, "version": 1, "subject": subject, "body": unique_name }).get_json_object()
+    response = python_client.post_template_preview(template_id, personalisation)
 
-    response = notifications_client.post_template_preview(template_id, personalisation)
+    if notification_type == EMAIL_TYPE:
+        validate(response, post_template_preview_response)
+    elif notification_type == SMS_TYPE:
+        validate(response, post_template_preview_response)
+        assert response["subject"] is None
+    else:
+        raise KeyError("template type should be email|sms")
 
-    validate(response, post_template_preview_response)
-    assert response["subject"] == subject
     assert template_id == response["id"]
     assert unique_name in response["body"]
 
 
-def test_get_all_templates(notifications_client, mock_response):
-
-    single_template_response = JSONBuilder.from_schema(get_template_by_id_response).get_json_object()
-    mock_response.json.return_value = JSONBuilder.from_schema(get_all_template_response).get_json_object()
-    mock_response.json.return_value["templates"] = [single_template_response]
-
-    response = notifications_client.get_all_templates()
-
+def get_all_templates(python_client):
+    response = python_client.get_all_templates()
     validate(response, get_all_template_response)
 
-@pytest.mark.parametrize(
-    "notification_type",
-    [
-        EMAIL_TYPE, SMS_TYPE
-    ])
-def test_get_all_templates_for_type(notifications_client, mock_response, notification_type):
 
-    single_template_response = JSONBuilder.from_schema(get_template_by_id_response).get_json_object()
-    mock_response.json.return_value = JSONBuilder.from_schema(get_all_template_response).get_json_object()
-    mock_response.json.return_value["templates"] = [single_template_response]
-
-    response = notifications_client.get_all_templates(notification_type)
+def get_all_templates_for_type(python_client, template_type):
+    response = python_client.get_all_templates(template_type)
     validate(response, get_all_template_response)
 
-def test_check_health_integration(notifications_client, mock_response):
+
+def retry_get_notification_by_id(client, notification_id, notification_type, max_retries=12, delay=5):
+    """
+    Retry fetching a notification by ID until a 200 response is received or the maximum retries are reached.
+
+    Args:
+        client: The API client used to make the request.
+        notification_id: The ID of the notification to fetch.
+        notification_type: The type of the notification (e.g., SMS_TYPE, EMAIL_TYPE).
+        max_retries: Maximum number of retries before giving up.
+        delay: Delay (in seconds) between retries.
+
+    Returns:
+        The response object if a 200 status code is received.
+
+    Raises:
+        Exception: If the maximum retries are reached without receiving a 200 response.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"Attempt {attempt}: Fetching notification {notification_id} (type: {notification_type})...")  # noqa: T201
+            response = client.get_notification_by_id(notification_id)
+
+            if notification_type == EMAIL_TYPE:
+                validate(response, get_notification_response)
+            elif notification_type == SMS_TYPE:
+                validate(response, get_notification_response)
+            else:
+                raise KeyError("notification type should be email|sms")
+
+            if response and "id" in response and response["id"] == notification_id:
+                print(f"Notification {notification_id} found after {attempt * delay} seconds.")  # noqa: T201
+                return response
+
+        except Exception as e:
+            print(f"Attempt {attempt}: Error while fetching notification {notification_id}. Error: {e}")  # noqa: T201
+
+        print(f"Retrying in {delay} seconds...")  # noqa: T201
+        time.sleep(delay)
+
+    raise Exception(f"Notification {notification_id} not found after {max_retries * delay} seconds.")
+
+
+def check_health_integration(notifications_client):
     """
     Teste l'intégration de la méthode check_health avec l'API réelle.
     """
-    mock_response.json.return_value = {"status": "ok"}
     response = notifications_client.check_health()
 
     assert response["status"] in ["ok", "unavailable"]
 
-def no_test_integration():
+
+def test_integration():
     client = NotificationsAPIClient(
         base_url=os.environ["NOTIFY_API_URL"], api_key=os.environ["API_KEY"], client_id=os.environ["CLIENT_ID"]
     )
@@ -296,28 +275,28 @@ def no_test_integration():
 
     version_number = 1
 
-    test_check_health_integration(client, mock_response())
+    check_health_integration(client)
 
-    test_send_bulk_notifications_with_csv(client, SMS_TYPE)
-    test_send_bulk_notifications_with_csv(client, EMAIL_TYPE)
+    send_bulk_notifications_with_csv(client, SMS_TYPE)
+    send_bulk_notifications_with_csv(client, EMAIL_TYPE)
 
-    test_send_bulk_notifications_with_rows(client, SMS_TYPE)
-    test_send_bulk_notifications_with_rows(client, EMAIL_TYPE)
+    send_bulk_notifications_with_rows(client, SMS_TYPE)
+    send_bulk_notifications_with_rows(client, EMAIL_TYPE)
 
-    test_get_template_by_id(client, mock_response(), SMS_TYPE)
-    test_get_template_by_id(client, mock_response(), EMAIL_TYPE)
-    test_get_template_by_id_and_version(client, mock_response(), sms_template_id, SMS_TYPE, None)
-    test_get_template_by_id_and_version(client, mock_response(), email_template_id, EMAIL_TYPE, "sujet")
-    test_post_template_preview(client, mock_response(), sms_template_id, SMS_TYPE, None)
-    test_post_template_preview(client, mock_response(), email_template_id, EMAIL_TYPE, "sujet")
-    test_get_all_templates(client, mock_response())
-    test_get_all_templates_for_type(client, mock_response(), EMAIL_TYPE)
-    test_get_all_templates_for_type(client, mock_response(), SMS_TYPE)
+    get_template_by_id(client, sms_template_id, SMS_TYPE)
+    get_template_by_id(client, email_template_id, EMAIL_TYPE)
+    get_template_by_id_and_version(client, sms_template_id, version_number, SMS_TYPE)
+    get_template_by_id_and_version(client, email_template_id, version_number, EMAIL_TYPE)
+    post_template_preview(client, sms_template_id, SMS_TYPE)
+    post_template_preview(client, email_template_id, EMAIL_TYPE)
+    get_all_templates(client)
+    get_all_templates_for_type(client, EMAIL_TYPE)
+    get_all_templates_for_type(client, SMS_TYPE)
 
-    sms_id = test_send_sms_notification_test_response(client, mock_response())
-    email_id = test_send_email_notification_test_response(client)
+    sms_id = send_sms_notification_test_response(client)
+    email_id = send_email_notification_test_response(client)
 
-    test_get_all_notifications(client, mock_response())
+    get_all_notifications(client)
 
     retry_get_notification_by_id(client, email_id, EMAIL_TYPE)
     retry_get_notification_by_id(client, sms_id, SMS_TYPE)
@@ -326,4 +305,4 @@ def no_test_integration():
 
 
 if __name__ == "__main__":
-    no_test_integration()
+    test_integration()
