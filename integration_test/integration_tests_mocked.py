@@ -1,7 +1,7 @@
+import json
 import os
-import time
 import uuid
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 
 import pytest
 from jsonschema import Draft4Validator
@@ -22,20 +22,42 @@ from integration_test.schemas.v2.template_schemas import (
 from integration_test.schemas.v2.templates_schemas import get_all_template_response
 from notifications_python_client.notifications import NotificationsAPIClient
 
+API_KEY = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+def check_headers(mock_session_instance):
+    assert set(mock_session_instance.request.call_args[1]["headers"].keys()) == {'Content-type', 'Authorization',
+                                                                                 'User-agent'}
+
+
+def check_call_body(mock_session_instance, body: dict):
+    assert json.loads(mock_session_instance.request.call_args[1]["data"]) == body
+
+
+def check_call(mock_session_instance, verb, url):
+    mock_session_instance.request.assert_called_once_with(verb, url, data=ANY,
+                                                          headers=ANY, timeout=30)
+
+
 @pytest.fixture
 def mock_response():
     mock_response = MagicMock(name="response")
     return mock_response
 
+
 @pytest.fixture
-def notifications_client(mock_response):
+def mock_session_instance():
+    request_session = MagicMock(name="actual_session")
+    return request_session
+
+
+@pytest.fixture
+def notifications_client(mock_response, mock_session_instance):
     with patch(target = "requests.Session") as mock_session:
 
-        mock_session_instance = MagicMock(name="actual_session")
         mock_session.return_value = mock_session_instance
         mock_session_instance.request.return_value = mock_response
         val =  NotificationsAPIClient(
-            base_url="base_url", api_key="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", client_id="client_id"
+            base_url="base_url", api_key=API_KEY, client_id="client_id"
         )
 
         return val
@@ -45,12 +67,14 @@ def validate(json_to_validate, schema):
     validator = Draft4Validator(schema)
     validator.validate(json_to_validate, schema)
 
-def test_send_sms_notification_test_response(notifications_client, mock_response):
+
+def test_send_sms_notification_test_response(notifications_client, mock_response, mock_session_instance):
     mobile_number = "+4382992998"
     template_id = "9090af3a-75b5-46d4-a7ce-0c1a174091fa"
     unique_name = str(uuid.uuid4())
     personalisation = {"name": unique_name}
-    mock_response.json.return_value = JSONBuilder.from_schema(post_sms_response).merge_values({"id": "7070bf3a-75b5-46d4-a7ce-0c1a174091fa", "content": { "body": unique_name}}).get_json_object()
+    mock_response.json.return_value = JSONBuilder.from_schema(post_sms_response).merge_values(
+        {"id": "7070bf3a-75b5-46d4-a7ce-0c1a174091fa", "content": {"body": unique_name}}).get_json_object()
 
     response = notifications_client.send_sms_notification(
         phone_number=mobile_number,
@@ -59,16 +83,25 @@ def test_send_sms_notification_test_response(notifications_client, mock_response
         sms_sender_id=None,
     )
     validate(response, post_sms_response)
+
+    check_call(mock_session_instance, "POST", "base_url/v2/notifications/sms")
+
+    check_call_body(mock_session_instance, {'personalisation': {'name': unique_name},
+                                       'phone_number': '+4382992998',
+                                       'template_id': template_id})
+
+    check_headers(mock_session_instance)
     assert unique_name in response["content"]["body"]  # check placeholders are replaced
     assert response["id"] == "7070bf3a-75b5-46d4-a7ce-0c1a174091fa"
 
+
 @pytest.mark.parametrize(
-    ("header", "destination"),
+    ("table_header", "destination"),
     [
         ("email address", "user1@fun.com"),
         ("phone_number", "+4182232345")
     ])
-def test_send_bulk_notifications_with_rows(notifications_client, mock_response, header, destination):
+def test_send_bulk_notifications_with_rows(notifications_client, mock_response, mock_session_instance, table_header, destination):
     """
     Teste l'envoi de notifications en masse via l'API.
     """
@@ -86,7 +119,7 @@ def test_send_bulk_notifications_with_rows(notifications_client, mock_response, 
 
 
     rows = [
-        [header, "name"],
+        [table_header, "name"],
         [destination, "Alice"],
         [destination, "Wok"]
     ]
@@ -105,6 +138,8 @@ def test_send_bulk_notifications_with_rows(notifications_client, mock_response, 
 
     # Validation de la réponse
     validate(response, post_bulk_notifications_response)
+    check_call(mock_session_instance, "POST", "base_url/v2/notifications/bulk")
+    check_call_body(mock_session_instance, {"template_id": template_id, "name": "Test Bulk Notification Integration", "rows": rows, "reference": "bulk_ref_integration_test"})
     assert response["data"]["id"] is not None
     assert response["data"]["notification_count"] == 2
     assert response["data"]["original_file_name"] == name
