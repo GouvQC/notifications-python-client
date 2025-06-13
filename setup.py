@@ -7,7 +7,7 @@ import ast
 import re
 
 from setuptools import find_packages, setup
-from setuptools.command.test import test as TestCommand
+#from setuptools.command.test import test as TestCommand
 
 # can't just import notifications_python_client.version as requirements may not be installed yet and imports will fail
 _version_re = re.compile(r"__version__\s+=\s+(.*)")
@@ -16,21 +16,21 @@ with open("notifications_python_client/__init__.py", "rb") as f:
     version = str(ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1)))
 
 
-class IntegrationTestCommand(TestCommand):
-    user_options = []
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = ""
-
-    def run_tests(self):
-        import shlex
-        import sys
-
-        import pytest
-
-        errno = pytest.main(shlex.split(self.pytest_args) + ["integration_test/integration_tests.py"])
-        sys.exit(errno)
+# class IntegrationTestCommand(TestCommand):
+#     user_options = []
+#
+#     def initialize_options(self):
+#         TestCommand.initialize_options(self)
+#         self.pytest_args = ""
+#
+#     def run_tests(self):
+#         import shlex
+#         import sys
+#
+#         import pytest
+#
+#         errno = pytest.main(shlex.split(self.pytest_args) + ["integration_test/integration_tests.py"])
+#         sys.exit(errno)
 
 
 setup(
@@ -64,5 +64,5 @@ setup(
     # for running pytest as `python setup.py test`, see
     # http://doc.pytest.org/en/latest/goodpractices.html#integrating-with-setuptools-python-setup-py-test-pytest-runner
     setup_requires=["pytest-runner"],
-    cmdclass={"integration_test": IntegrationTestCommand},
+    #cmdclass={"integration_test": IntegrationTestCommand},
 )
