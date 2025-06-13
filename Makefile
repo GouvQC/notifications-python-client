@@ -14,7 +14,7 @@ freeze-requirements: ## Freeze requirements files
 .PHONY: bootstrap
 bootstrap: ## Install build dependencies
 	pip install --upgrade pip-tools
-	pip install -r requirements_for_test.txt
+	pip install --use-pep517 -r requirements_for_test.txt
 
 .PHONY: build
 build: bootstrap ## Build project (dummy task for CI)
