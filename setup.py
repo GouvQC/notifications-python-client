@@ -43,7 +43,7 @@ setup(
     long_description=__doc__,
     classifiers=[
         "Intended Audience :: Developers",
-        "License : OSI Approved :: Licence Libre du Québec - Réciprocité forte (LiLiQ-R+)",
+        "License :: OSI Approved :: GNU Lesser General Public License v3.0",
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.8",
