@@ -31,8 +31,8 @@ integration-test: ## Run integration tests
 
 .PHONY: build-wheel
 build-wheel: ## build distributable wheel
-	pip install wheel
-	python python -m build
+	pip install wheel build
+	python  -m build
 
 .PHONY: publish-to-pypi
 publish-to-pypi: build-wheel ## upload distributable wheel to pypi
