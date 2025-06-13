@@ -34,9 +34,9 @@ class IntegrationTestCommand(TestCommand):
 
 
 setup(
-    name="notifications-python-client",
+    name="certainly-not-python-client",
     version=version,
-    url="https://github.com/GouvQC/notifications-python-client",
+    url="https://github.com/jpbelang/certainly-not-python-client",
     license="LiLiQ-R+",
     author="Ministère de la Cybersécurité et du numérique (MCN)",
     description="Python API client for La Plateforme gouvernementale de notification.",
