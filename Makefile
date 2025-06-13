@@ -14,7 +14,7 @@ freeze-requirements: ## Freeze requirements files
 .PHONY: bootstrap
 bootstrap: ## Install build dependencies
 	pip install --upgrade pip-tools
-	pip install --use-pep517 -r requirements_for_test.txt
+	pip install -r requirements_for_test.txt
 
 .PHONY: build
 build: bootstrap ## Build project (dummy task for CI)
@@ -32,7 +32,7 @@ integration-test: ## Run integration tests
 .PHONY: build-wheel
 build-wheel: ## build distributable wheel
 	pip install wheel
-	python setup.py bdist_wheel
+	python python -m build
 
 .PHONY: publish-to-pypi
 publish-to-pypi: build-wheel ## upload distributable wheel to pypi
