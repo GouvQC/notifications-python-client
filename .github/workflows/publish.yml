@@ -1,32 +1,67 @@
-name: publish
-
-on:
-  pull_request:
-    branches: [main]
-#on:
-#  release:
-#    types: [ published ]
-
+name: Publication vers TestPyPI et PyPI
+on: push
 jobs:
-  publish:
+  build:
+    name: Creer la distribution
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/certainly-not-python-client
-    permissions:
-      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
       - name: Install dependencies
         run: make bootstrap
       - name: Build package
         run: make build-wheel
-      - name: Publish to PyPI
-        env:
-          PYPI_USERNAME: __token__
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: make publish-to-pypi
+      - name: Stocker l'artefact.
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: Publier vers PyPI
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/notification-python-client  # Replace <package-name> with your PyPI project name
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Recuperer les distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publication
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-to-testpypi:
+    name: Publier vers TestPyPI
+    needs:
+      - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/notification-python-client
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Recuperer les distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publication (TestPyPI)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

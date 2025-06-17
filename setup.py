@@ -34,9 +34,9 @@ with open("notifications_python_client/__init__.py", "rb") as f:
 
 
 setup(
-    name="certainly-not-python-client",
+    name="notification-python-client",
     version=version,
-    url="https://github.com/jpbelang/certainly-not-python-client",
+    url="https://github.com/GouvQC/notifications-python-client",
     license="LiLiQ-Rplus-1.1",
     author="Ministère de la Cybersécurité et du numérique (MCN)",
     description="Python API client for La Plateforme gouvernementale de notification.",
@@ -63,5 +63,4 @@ setup(
     # for running pytest as `python setup.py test`, see
     # http://doc.pytest.org/en/latest/goodpractices.html#integrating-with-setuptools-python-setup-py-test-pytest-runner
     setup_requires=["pytest-runner"],
-    #cmdclass={"integration_test": IntegrationTestCommand},
 )
