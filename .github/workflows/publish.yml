@@ -61,8 +61,23 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-      - name: Publication (TestPyPI)
-        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - uses: actions/checkout@v4
         with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
+          persist-credentials: false
+
+      - name: Recuperer version
+        uses: reecetech/version-increment@2024.10.1
+        id: version
+        with:
+            scheme: semver
+            increment: patch
+
+      - name: Imprimer version
+        run: echo "Nous irions a la version ${steps.version.outputs.version} nommee aussi ${steps.version.outputs.current-version}
+
+#      - name: Publication (TestPyPI)
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          repository-url: https://test.pypi.org/legacy/
+#          verbose: true
