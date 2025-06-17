@@ -12,9 +12,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
-      - name: Install dependencies
+      - name: installer dependances
         run: make bootstrap
-      - name: Build package
+      - name: Creer package
         run: make build-wheel
       - name: Stocker l'artefact.
         uses: actions/upload-artifact@v4
