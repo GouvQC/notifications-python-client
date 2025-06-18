@@ -76,6 +76,9 @@ jobs:
       - name: Imprimer version
         run: echo "Nous irions a la version ${{steps.version.outputs.version}} nommee aussi ${{steps.version.outputs.current-version}}"
 
+      - name: Montrer le contenu
+        run: ls -l dist/
+
 #      - name: Publication (TestPyPI)
 #        uses: pypa/gh-action-pypi-publish@release/v1
 #        with:
