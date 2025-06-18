@@ -68,6 +68,7 @@ jobs:
         with:
             scheme: semver
             increment: patch
+            use_api: true
 
       - name: Imprimer version
         run: echo "Nous irions a la version ${{steps.version.outputs.version}} nommee aussi ${{steps.version.outputs.current-version}}"
