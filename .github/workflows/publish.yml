@@ -8,14 +8,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
+
+      - name: Recuperer version
+        uses: reecetech/version-increment@2024.10.1
+        id: version
+        with:
+          scheme: semver
+          increment: patch
+
       - name: installer dependances
         run: make bootstrap
       - name: Creer package
-        run: make build-wheel
+        run: export PROJECT_VERSION=${{steps.version.outputs.version}} &&  make build-wheel && make build-wheel
       - name: Stocker l'artefact.
         uses: actions/upload-artifact@v4
         with:
@@ -62,19 +71,11 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-      - name: Recuperer version
-        uses: reecetech/version-increment@2024.10.1
-        id: version
-        with:
-            scheme: semver
-            increment: patch
-            use_api: true
-
       - name: Imprimer version
         run: echo "Nous irions a la version ${{steps.version.outputs.version}} nommee aussi ${{steps.version.outputs.current-version}}"
 
       - name: Montrer le contenu
-        run: ls -l
+        run: ls -l dist/
 
 #      - name: Publication (TestPyPI)
 #        uses: pypa/gh-action-pypi-publish@release/v1

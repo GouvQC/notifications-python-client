@@ -4,6 +4,7 @@ Python API client for PGN - see https://admin.notification.gouv.qc.ca/ for more 
 """
 
 import ast
+import os
 import re
 
 from setuptools import find_packages, setup
@@ -35,7 +36,7 @@ with open("notifications_python_client/__init__.py", "rb") as f:
 
 setup(
     name="notification-python-client",
-    version=version,
+    version=os.environ.get("PROJECT_VERSION", version),
     url="https://github.com/GouvQC/notifications-python-client",
     license="LiLiQ-Rplus-1.1",
     author="Ministère de la Cybersécurité et du numérique (MCN)",
