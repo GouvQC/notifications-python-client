@@ -62,10 +62,6 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
       - name: Recuperer version
         uses: reecetech/version-increment@2024.10.1
         id: version
@@ -77,7 +73,7 @@ jobs:
         run: echo "Nous irions a la version ${{steps.version.outputs.version}} nommee aussi ${{steps.version.outputs.current-version}}"
 
       - name: Montrer le contenu
-        run: ls -l
+        run: ls -l notifications-python-client/notifications-python-client/dist
 
 #      - name: Publication (TestPyPI)
 #        uses: pypa/gh-action-pypi-publish@release/v1
