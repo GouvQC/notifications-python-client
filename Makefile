@@ -31,15 +31,15 @@ integration-test: ## Run integration tests
 
 .PHONY: build-wheel
 build-wheel: ## build distributable wheel
-	pip install wheel
-	python setup.py bdist_wheel
+	pip install wheel build
+	python  -m build
 
 .PHONY: publish-to-pypi
 publish-to-pypi: build-wheel ## upload distributable wheel to pypi
 	pip install --upgrade twine
 	@twine upload dist/*.whl \
 		--username="${PYPI_USERNAME}" \
-		--password="${PYPI_PASSWORD}" \
+		--password="${PYPI_TOKEN}" \
 		--skip-existing # if you haven't run `make clean` there may be old wheels - don't try and re-upload them
 
 .PHONY: bootstrap-with-docker

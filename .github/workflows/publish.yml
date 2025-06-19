@@ -1,0 +1,87 @@
+name: Publication vers TestPyPI et PyPI
+on: [ pull_request, release, push ]
+jobs:
+  build:
+    name: Creer la distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Recuperer version
+        uses: reecetech/version-increment@2024.10.1
+        id: version
+        with:
+          scheme: semver
+          increment: patch
+          pep440: true
+
+      - name: Imprimer version
+        run: echo "Nous irions a la version ${{steps.version.outputs.version}} suivante de ${{steps.version.outputs.current-version}}"
+
+      - name: installer dependances
+        run: make bootstrap
+      - name: Creer package
+        run: |
+            export TIME=`date +%s`
+            export PROJECT_VERSION=`echo ${{steps.version.outputs.version}} | sed  "s/\(\d*\)+pre.*/a0.dev$TIME/"` 
+            sed -i "s/0.0.0+pre.local/$PROJECT_VERSION/" notifications_python_client/__init__.py
+            make build-wheel
+      - name: Stocker l'artefact.
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: Publier vers PyPI
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/notification-python-client  # Replace <package-name> with your PyPI project name
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Recuperer les distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publication
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-to-testpypi:
+
+    name: Publier vers TestPyPI
+    if: startsWith(github.ref, 'refs/pull/')  # only publish to PyPI on tag pushes
+    needs:
+      - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/notification-python-client
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Recuperer les distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publication (TestPyPI)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
