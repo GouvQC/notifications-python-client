@@ -25,7 +25,7 @@ jobs:
           scheme: semver
           increment: patch
           pep440: true
-          release_branch: main
+          release_branch: task/347354-publish-problem
 
       - name: Imprimer version
         run: echo "Nous irions a la version ${{steps.version.outputs.version}} suivante de ${{steps.version.outputs.current-version}}"
