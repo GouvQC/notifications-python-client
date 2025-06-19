@@ -25,7 +25,6 @@ jobs:
           scheme: semver
           increment: patch
           pep440: true
-          release_branch: task/347354-publish-problem
 
       - name: installer dependances
         run: make bootstrap
