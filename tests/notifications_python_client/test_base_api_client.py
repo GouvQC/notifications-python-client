@@ -113,7 +113,7 @@ def test_user_agent_is_set(base_client, rmock):
     base_client.request("GET", "/")
 
     assert re.fullmatch(
-        r"NOTIFY-API-PYTHON-CLIENT\/(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)",
+        r"NOTIFY-API-PYTHON-CLIENT\/(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(\+.*)",
         rmock.last_request.headers.get("User-Agent"),
     )
 
