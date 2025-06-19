@@ -61,7 +61,6 @@ jobs:
 
   publish-to-testpypi:
 
-    if: github.p
     name: Publier vers TestPyPI
     
     needs:
