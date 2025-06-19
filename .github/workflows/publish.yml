@@ -1,5 +1,5 @@
 name: Publication vers TestPyPI et PyPI
-on: push
+on: [ pull_request, push ]
 jobs:
   build:
     name: Creer la distribution
