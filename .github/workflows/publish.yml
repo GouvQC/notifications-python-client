@@ -35,7 +35,7 @@ jobs:
       - name: Creer package
         run: |
             if [ "${{github.event_name}}" == "pull_request" ] ; then
-              publish_version=${{steps.version.outputs.current-version}}"
+              publish_version=${{steps.version.outputs.current-version}}
             else 
               publish_version=${{steps.version.outputs.version}}
             fi
