@@ -28,13 +28,12 @@ jobs:
           release_branch: task/347354-publish-problem
 
       - name: Imprimer version
-        run: echo "Nous irions ${{github.action}} a la version ${{steps.version.outputs.version}} suivante de ${{steps.version.outputs.current-version}}"
+        run: echo "Nous irions ${{github.event_name}} a la version ${{steps.version.outputs.version}} suivante de ${{steps.version.outputs.current-version}}"
 
       - name: installer dependances
         run: make bootstrap
       - name: Creer package
         run: |
-            if [ ]
             export TIME=`date +%s`
             export PROJECT_VERSION=`echo ${{steps.version.outputs.version}} | sed  "s/\(\d*\)+pre.*/a0.dev$TIME/"` 
             sed -i "s/0.0.0+pre.local/$PROJECT_VERSION/" notifications_python_client/__init__.py
