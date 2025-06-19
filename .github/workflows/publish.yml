@@ -57,7 +57,6 @@ jobs:
 
   publish-to-testpypi:
     name: Publier vers TestPyPI
-    if: startsWith(github.ref, 'refs/tags/')  # temporaire
     needs:
       - build
     runs-on: ubuntu-latest
