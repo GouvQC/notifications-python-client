@@ -1,5 +1,9 @@
 name: Publication vers TestPyPI et PyPI
-on: [ pull_request, release, push ]
+on:
+  pull_request:
+  release:
+    types:
+      - published
 jobs:
   build:
     name: Creer la distribution
@@ -22,16 +26,19 @@ jobs:
           increment: patch
           pep440: true
 
-      - name: Imprimer version
-        run: echo "Nous irions a la version ${{steps.version.outputs.version}} suivante de ${{steps.version.outputs.current-version}}"
-
       - name: installer dependances
         run: make bootstrap
       - name: Creer package
         run: |
+            if [ "${{github.event_name}}" == "release" ] ; then
+              publish_version=${{steps.version.outputs.current-version}}
+            else 
+              publish_version=${{steps.version.outputs.version}}
+            fi
             export TIME=`date +%s`
-            export PROJECT_VERSION=`echo ${{steps.version.outputs.version}} | sed  "s/\(\d*\)+pre.*/a0.dev$TIME/"` 
+            export PROJECT_VERSION=`echo $publish_version | sed  "s/\(\d*\)+pre.*/a0.dev$TIME/"` 
             sed -i "s/0.0.0+pre.local/$PROJECT_VERSION/" notifications_python_client/__init__.py
+            echo "creation de version $PROJECT_VERSION"
             make build-wheel
       - name: Stocker l'artefact.
         uses: actions/upload-artifact@v4
