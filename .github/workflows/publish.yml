@@ -21,6 +21,7 @@ jobs:
           scheme: semver
           increment: patch
           pep440: true
+          release_branch: main
 
       - name: Imprimer version
         run: echo "Nous irions a la version ${{steps.version.outputs.version}} suivante de ${{steps.version.outputs.current-version}}"
@@ -41,7 +42,7 @@ jobs:
 
   publish-to-pypi:
     name: Publier vers PyPI
-    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    if: startsWith(github.ref, 'xxrefs/tags/')  # only publish to PyPI on tag pushes
     needs:
       - build
     runs-on: ubuntu-latest
@@ -62,7 +63,7 @@ jobs:
   publish-to-testpypi:
 
     name: Publier vers TestPyPI
-    if: startsWith(github.ref, 'refs/pull/')  # only publish to PyPI on tag pushes
+    if: startsWith(github.ref, 'xxrefs/pull/')  # only publish to PyPI on tag pushes
     needs:
       - build
     runs-on: ubuntu-latest
