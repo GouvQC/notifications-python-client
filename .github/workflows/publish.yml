@@ -28,7 +28,7 @@ jobs:
       - name: installer dependances
         run: make bootstrap
       - name: Creer package
-        run: export PROJECT_VERSION=`echo ${{steps.version.outputs.version}} | sed 's/+pre./.dev/'` && make build-wheel && make build-wheel
+        run: export TIME=`date +%s` && export PROJECT_VERSION=`echo ${{steps.version.outputs.version}} | sed  's/\(\d*\)+pre.*/a2.dev$TIME/'` && make build-wheel && make build-wheel
       - name: Stocker l'artefact.
         uses: actions/upload-artifact@v4
         with:
@@ -57,6 +57,7 @@ jobs:
 
   publish-to-testpypi:
     name: Publier vers TestPyPI
+    if: startsWith(github.ref, 'refs/tags/')  # temporaire
     needs:
       - build
     runs-on: ubuntu-latest
