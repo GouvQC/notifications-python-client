@@ -60,9 +60,10 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
   publish-to-testpypi:
-    
+
+    if: github.p
     name: Publier vers TestPyPI
-    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    
     needs:
       - build
     runs-on: ubuntu-latest
@@ -80,9 +81,10 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-
-      - name: Publication (TestPyPI)
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
+      - name: debug
+        run: echo reference ${{github.ref}}
+#      - name: Publication (TestPyPI)
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          repository-url: https://test.pypi.org/legacy/
+#          verbose: true
