@@ -23,7 +23,7 @@ jobs:
         id: version
         with:
           scheme: semver
-          increment: patch
+          increment: none
           pep440: true
           release_branch: task/347354-publish-problem
 
