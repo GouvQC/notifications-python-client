@@ -34,8 +34,13 @@ jobs:
         run: make bootstrap
       - name: Creer package
         run: |
+            if [ "${{github.event_name}}" == "pull_request" ] ; then
+              publish_version=${{steps.version.outputs.current-version}}"
+            else 
+              publish_version=${{steps.version.outputs.version}}
+            fi
             export TIME=`date +%s`
-            export PROJECT_VERSION=`echo ${{steps.version.outputs.version}} | sed  "s/\(\d*\)+pre.*/a0.dev$TIME/"` 
+            export PROJECT_VERSION=`echo $publish_version | sed  "s/\(\d*\)+pre.*/a0.dev$TIME/"` 
             sed -i "s/0.0.0+pre.local/$PROJECT_VERSION/" notifications_python_client/__init__.py
             make build-wheel
       - name: Stocker l'artefact.
