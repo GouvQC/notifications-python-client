@@ -24,13 +24,34 @@ jobs:
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
+        id: trivy_docker
         with:
           image-ref: notifications-python-client
           format: table
+          output: trivy-docker-report.txt
           exit-code: 1
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+
+      - name: Send Trivy report by email
+        if: steps.trivy_docker.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_SMTP_HOST }}
+          server_port: ${{ secrets.EMAIL_SMTP_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Vulnérabilités CRITICAL/HIGH détectées par Trivy - Docker - notifications-python-client"
+          body: |
+            Des vulnérabilités critiques ou majeures ont été détectées lors du scan Docker de Trivy. 
+
+            Consultez le pipeline ici :
+
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} 
+          to: ${{ secrets.EMAIL_TO }}
+          from: PGN Security Bot <${{ secrets.EMAIL_USERNAME }}>
+          attachments: trivy-docker-report.txt
 
   filesystem-scan:
     name: Scan de securite Trivy (filesystem via SBOM)
@@ -64,11 +85,32 @@ jobs:
           cyclonedx-py venv -o sbom.json
 
       - name: Scan SBOM with Trivy
+        id: trivy_sbom
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: sbom
           scan-ref: sbom.json
           format: table
+          output: trivy-sbom-report.txt
           exit-code: 1
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+
+      - name: Send Trivy report by email
+        if: steps.trivy_sbom.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_SMTP_HOST }}
+          server_port: ${{ secrets.EMAIL_SMTP_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Vulnérabilités CRITICAL/HIGH détectées par Trivy - SBOM - notifications-python-client"
+          body: |
+            Des vulnérabilités critiques ou majeures ont été détectées lors du scan SBOM de Trivy. 
+
+            Consultez le pipeline ici :
+
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} 
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_TO }}
+          attachments: trivy-sbom-report.txt
