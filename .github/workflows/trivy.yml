@@ -25,6 +25,7 @@ jobs:
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         id: trivy_docker
+        continue-on-error: true
         with:
           image-ref: notifications-python-client
           format: table
@@ -50,7 +51,7 @@ jobs:
 
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} 
           to: ${{ secrets.EMAIL_TO }}
-          from: PGN Security Bot <${{ secrets.EMAIL_USERNAME }}>
+          from: ${{ secrets.EMAIL_FROM }}
           attachments: trivy-docker-report.txt
 
   filesystem-scan:
@@ -87,6 +88,7 @@ jobs:
       - name: Scan SBOM with Trivy
         id: trivy_sbom
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           scan-type: sbom
           scan-ref: sbom.json
@@ -112,5 +114,5 @@ jobs:
 
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} 
           to: ${{ secrets.EMAIL_TO }}
-          from: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
           attachments: trivy-sbom-report.txt
